@@ -1,0 +1,13 @@
+Package: prolfquappPTMreaders
+Type: Package
+Title: prolfquapp preprocess functions for FP PTM ouptuts
+Version: 0.1.0
+Author: Witold E. Wolski <wew@fgcz.ethz.ch>
+Maintainer: Witold E. Wolski <wew@fgcz.ethz.ch>
+Description: 
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports:
+ prolfquapp
+RoxygenNote: 7.3.1
