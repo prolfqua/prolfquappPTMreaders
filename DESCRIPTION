@@ -1,13 +1,17 @@
 Package: prolfquappPTMreaders
 Type: Package
-Title: prolfquapp preprocess functions for FP PTM ouptuts
+Title: prolfquapp Preprocess Functions for FP PTM Outputs
 Version: 0.1.0
-Author: Witold E. Wolski <wew@fgcz.ethz.ch>
+Authors@R: c(
+    person("Jonas", "Grossmann", email = "jg@fgcz.ethz.ch", role = c("aut")),
+    person("Witold E.", "Wolski", email = "wew@fgcz.ethz.ch", role = c("aut", "cre"))
+)
 Maintainer: Witold E. Wolski <wew@fgcz.ethz.ch>
-Description: 
-License: What license is it under?
+Description: Functions for preprocessing data outputs related to PTMs 
+    from the prolfquapp package.
+License: What license is it under? (e.g., GPL-3, MIT + file LICENSE)
 Encoding: UTF-8
 LazyData: true
 Imports:
- prolfquapp
+    prolfquapp
 RoxygenNote: 7.3.1
