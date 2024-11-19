@@ -22,3 +22,10 @@ ext_reader:
   preprocess: prolfquappPTMreaders::preprocess_FP_combined_STY
   get_files: prolfquappPTMreaders::get_FP_combined_STY_files
 ```
+
+
+# Installation instructions
+
+```
+remotes::install_github("prolfqua/prolfquappPTMreaders", dependencies = TRUE)
+```
