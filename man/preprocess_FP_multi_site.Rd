@@ -19,6 +19,6 @@ list with lfqdata and protein annotation
 preprocess FP multisite, filter by purity_threshold and PeptideProphetProb
 }
 \examples{
-identical(formals(preprocess_FP_multi_site), formals(prolfquapp::preprocess_dummy))
+identical(names(formals(preprocess_FP_multi_site)), names(formals(prolfquapp::preprocess_dummy)))
 
 }
