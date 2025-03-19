@@ -18,7 +18,7 @@ When starting the analysis from `^combined_site_STY_.+\\.tsv`
 
 ```
 ext_reader:
-  extra_args: list(pattern_contaminants = "^zz|^CON|Cont_", pattern_decoys = "^REV_|^rev_",  annotation_join_by = c("raw.file", "Name")")
+  extra_args: list(pattern_contaminants = "^zz|^CON|Cont_", pattern_decoys = "^REV_|^rev_",  annotation_join_by = c("raw.file", "Name"))
   preprocess: prolfquappPTMreaders::preprocess_FP_combined_STY
   get_files: prolfquappPTMreaders::get_FP_combined_STY_files
 ```
