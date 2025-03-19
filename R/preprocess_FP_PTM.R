@@ -6,7 +6,7 @@
 #'
 get_FP_multi_site_files <- function(path){
     psm_file <- dir(path = path, pattern = "abundance_multi-site_None.tsv", recursive = TRUE, full.names = TRUE)
-    fasta.files <- grep("*.fasta$", dir(path = path, recursive = TRUE,full.names = TRUE), value = TRUE)
+    fasta.files <- grep("*.fasta$|*.fas", dir(path = path, recursive = TRUE,full.names = TRUE), value = TRUE)
     if (any(grepl("database[0-9]*.fasta$", fasta.files))) {
         fasta.files <- grep("database[0-9]*.fasta$", fasta.files, value = TRUE)
     }
@@ -45,7 +45,9 @@ preprocess_FP_multi_site <- function(
 
 
     # join with anno again this should work now with Name # if not all samples are used in the dataset they would be removed here (to be tested)
-    multiSite_long <- dplyr::inner_join(x = annotation$annot, y = multiSite_long)
+    bw <- "channel"
+    names(bw) <- annotation$atable$fileName
+    multiSite_long <- dplyr::inner_join(x = annotation$annot, y = multiSite_long, by = bw)
     # add missing required parameters (qvalue)
     multiSite_long$qValue <- 1 - multiSite_long$MaxPepProb
     multiSite_long$nr_children  <- 1
@@ -146,7 +148,7 @@ read_combined_STY_file <- function(file){
             names_to = c("SampleName", ".value"),
             names_sep = " "
         )
-    tidy_data <- tidy_data |> dplyr::rename(ProteinID = !!sym("Protein ID"))
+    tidy_data <- tidy_data |> dplyr::rename(ProteinID = !!rlang::sym("Protein ID"))
     return(tidy_data)
 }
 
@@ -157,16 +159,15 @@ read_combined_STY_file <- function(file){
 #' @param annotation_join_by column in annotation file
 preprocess_FP_combined_STY <- function(
         quant_data,
-        fasta,
+        fasta_file,
         annotation,
         pattern_contaminants = "^zz|^CON|Cont_",
         pattern_decoys = "^REV_|^rev_",
         annotation_join_by = c("raw.file", "Name")
 ){
 
-    annotation_join_by <- match.arg(annotation_join_by)
+    #annotation_join_by <- match.arg(annotation_join_by)
     pattern_contaminants = "^zz|^CON"
-    pattern_decoys = "REV_"
 
     annot <- annotation$annot
     atable <- annotation$atable
@@ -175,7 +176,7 @@ preprocess_FP_combined_STY <- function(
                         (basename(normalize_path(annot[[atable$fileName]])))
         ))
 
-    multiSite_long <- prolfquapp::read_combined_STY_file(quant_data)
+    multiSite_long <- prolfquappPTMreaders::read_combined_STY_file(quant_data)
     # join with anno again this should work now with Name # if not all samples are used in the dataset they would be removed here (to be tested)
     by = "SampleName"
     names(by) = annotation_join_by
@@ -218,7 +219,8 @@ preprocess_FP_combined_STY <- function(
         dplyr::group_by(ProteinID) |>
         dplyr::summarize(nrPeptides = dplyr::n()) |> dplyr::ungroup()
 
-    fasta_annot <- prolfquapp::get_annot_from_fasta(fasta, pattern_decoys = pattern_decoys)
+    fasta_annot <- prolfquapp::get_annot_from_fasta(fasta_file, pattern_decoys = pattern_decoys)
+
     fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot, by = c(ProteinID = "proteinname"), multiple = "all")
     fasta_annot <- fasta_annot |> dplyr::rename(description = fasta.header)
     fasta_annot2 <- dplyr::inner_join(fasta_annot, phosSite, by = "ProteinID")

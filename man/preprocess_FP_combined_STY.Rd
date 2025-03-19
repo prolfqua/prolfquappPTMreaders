@@ -6,7 +6,7 @@
 \usage{
 preprocess_FP_combined_STY(
   quant_data,
-  fasta,
+  fasta_file,
   annotation,
   pattern_contaminants = "^zz|^CON|Cont_",
   pattern_decoys = "^REV_|^rev_",
