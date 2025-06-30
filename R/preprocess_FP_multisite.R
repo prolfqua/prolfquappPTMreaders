@@ -1,3 +1,24 @@
+
+#' get report.tsv and fasta file location in folder
+#' @return list with paths to data and fasta
+#' @export
+#' @examples
+#' identical(formals(get_FP_multi_site_files), formals(prolfquapp::get_dummy_files))
+#'
+get_FP_single_site_files <- function(path){
+  psm_file <- dir(path = path, pattern = "abundance_single-site_None.tsv", recursive = TRUE, full.names = TRUE)
+  fasta.files <- grep("*.fasta$|*.fas", dir(path = path, recursive = TRUE,full.names = TRUE), value = TRUE)
+  if (any(grepl("database[0-9]*.fasta$", fasta.files))) {
+    fasta.files <- grep("database[0-9]*.fasta$", fasta.files, value = TRUE)
+  }
+  if (length(fasta.files) == 0) {
+    logger::log_error("No fasta file found!")
+    stop()
+  }
+  return(list(data = psm_file, fasta = fasta.files))
+}
+
+
 #' get report.tsv and fasta file location in folder
 #' @return list with paths to data and fasta
 #' @export
@@ -34,8 +55,9 @@ read_FP_multisite_to_long <- function(quant_data) {
 #' create dataset template from FP multi_site
 #' @export
 dataset_template_FP_multi_site <- function(files){
-  xx <- FP_multisite_to_long(files$data)
-  dataset <- data.frame(raw.file = channel, Name = channel ,Group = NA, Subject = NA, CONTROL = NA)
+  xx <- read_FP_multisite_to_long(files$data)
+  channels <- unique(xx$channel)
+  dataset <- data.frame(raw.file = channels, Name = channels ,Group = NA, Subject = NA, CONTROL = NA)
   return(dataset)
 }
 
@@ -60,7 +82,7 @@ preprocess_FP_multi_site <- function(
                     (basename(annot[[atable$fileName]]))
     ))
 
-  multiSite_long <- FP_multisite_to_long(quant_data)
+  multiSite_long <- read_FP_multisite_to_long(quant_data)
   bw <- "channel"
 
   names(bw) <- annotation$atable$fileName
