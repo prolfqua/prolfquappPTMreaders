@@ -19,7 +19,9 @@ get_FP_multi_site_files <- function(path){
 
 
 
-FP_multisite_to_long <- function(quant_data) {
+#' read multisite file
+#' @export
+read_FP_multisite_to_long <- function(quant_data) {
   xx <- readr::read_tsv(quant_data)
   quant_idx_start <- grep(pattern = "ReferenceIntensity", x = colnames(xx))  + 1
   multiSite_long <- xx |>
