@@ -72,9 +72,10 @@ preprocess_FP_multi_site <- function(
     quant_data,
     fasta_file,
     annotation,
+    sitetype = c("singlesite", "multisite"),
     pattern_contaminants = "^zz|^CON|Cont_",
     pattern_decoys = "^REV_|^rev_"){
-
+  sitetype <- match.arg(sitetype)
   annot <- annotation$annot
   atable <- annotation$atable
   annot <- annot |> dplyr::mutate(
@@ -117,15 +118,24 @@ preprocess_FP_multi_site <- function(
     dplyr::select(c("Index", "ProteinID", "Peptide", "SequenceWindow", "Start", "End", "MaxPepProb", "ReferenceIntensity")) |>
     dplyr::distinct()
   phosSite <- site_annot |> dplyr::rowwise() |> dplyr::mutate(siteinfo = gsub(ProteinID, "", Index))
-  phosSite <- phosSite |>
-    tidyr::separate_wider_delim(siteinfo, names = c(NA, "startModSite", "endModSite", "NumPhos", "LocalizedNumPhos", "PhosSites"), delim = "_",
-                                too_few = "align_start")
+  if(sitetype == "singlesite"){
+    phosSite <- phosSite |>
+      tidyr::separate_wider_delim(siteinfo, names = c(NA, "PhosSites"), delim = "_",
+                                  too_few = "align_start")
+    phosSite <- phosSite |>
+      extract(siteinfo, into = c("AA", "position"), regex = "([A-Z])(\\d+)", convert = TRUE, remove = FALSE)
+  } else if(sitetype == "multisite") {
+    phosSite <- phosSite |>
+      tidyr::separate_wider_delim(siteinfo, names = c(NA, "startModSite", "endModSite", "NumPhos", "LocalizedNumPhos", "PhosSites"), delim = "_",
+                                  too_few = "align_start")
+    split_codes <- function(x) {
+      if (is.na(x)) return(NA)
+      return(gsub("([A-Z]\\d+)(?=[A-Z]\\d+)", "\\1;", x, perl = TRUE))
+    }
+    phosSite$PhosSites <- sapply(phosSite$PhosSites, split_codes)
 
-  split_codes <- function(x) {
-    if (is.na(x)) return(NA)
-    return(gsub("([A-Z]\\d+)(?=[A-Z]\\d+)", "\\1;", x, perl = TRUE))
   }
-  phosSite$PhosSites <- sapply(phosSite$PhosSites, split_codes)
+
 
 
   nrPep_exp <- multiSite_long |>

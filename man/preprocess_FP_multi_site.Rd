@@ -8,6 +8,7 @@ preprocess_FP_multi_site(
   quant_data,
   fasta_file,
   annotation,
+  sitetype = c("singlesite", "multisite"),
   pattern_contaminants = "^zz|^CON|Cont_",
   pattern_decoys = "^REV_|^rev_"
 )

@@ -2,13 +2,13 @@
 #' @export
 prolfqua_preprocess_functions <- list(
   FP_multisite = list(
-    extra_args = list(),
+    extra_args = list(sitetype = "multisite"),
     preprocess = "prolfquappPTMreaders::preprocess_FP_multi_site",
     get_files = "prolfquappPTMreaders::get_FP_multi_site_files",
     dataset = "prolfquappPTMreaders::dataset_template_FP_multi_site"
   ),
   FP_singlesite = list(
-    extra_args = list(),
+    extra_args = list(sitetype = "singlesite"),
     preprocess = "prolfquappPTMreaders::preprocess_FP_multi_site",
     get_files = "prolfquappPTMreaders::get_FP_single_site_files",
     dataset = "prolfquappPTMreaders::dataset_template_FP_multi_site"
