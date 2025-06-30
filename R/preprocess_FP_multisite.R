@@ -25,12 +25,12 @@ FP_multisite_to_long <- function(quant_data) {
   multiSite_long <- xx |>
     tidyr::pivot_longer(cols = all_of(quant_idx_start:ncol(xx)), values_to = "abundance", names_to = "channel")
 
-
-
-  # join with anno again this should work now with Name # if not all samples are used in the dataset they would be removed here (to be tested)
   return(multiSite_long)
 }
 
+
+#' create dataset template from FP multi_site
+#' @export
 dataset_template_FP_multi_site <- function(files){
   xx <- FP_multisite_to_long(files$data)
   dataset <- data.frame(raw.file = channel, Name = channel ,Group = NA, Subject = NA, CONTROL = NA)
@@ -62,6 +62,9 @@ preprocess_FP_multi_site <- function(
   bw <- "channel"
 
   names(bw) <- annotation$atable$fileName
+
+  # join with anno again this should work now with Name # if not all samples are used in the dataset they would be removed here (to be tested)
+
   multiSite_long <- dplyr::inner_join(x = annotation$annot, y = multiSite_long, by = bw)
   # add missing required parameters (qvalue)
   multiSite_long$qValue <- 1 - multiSite_long$MaxPepProb
