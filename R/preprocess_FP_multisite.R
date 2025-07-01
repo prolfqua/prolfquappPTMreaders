@@ -118,12 +118,13 @@ preprocess_FP_multi_site <- function(
     dplyr::select(c("Index", "ProteinID", "Peptide", "SequenceWindow", "Start", "End", "MaxPepProb", "ReferenceIntensity")) |>
     dplyr::distinct()
   phosSite <- site_annot |> dplyr::rowwise() |> dplyr::mutate(siteinfo = gsub(ProteinID, "", Index))
+
   if(sitetype == "singlesite"){
     phosSite <- phosSite |>
       tidyr::separate_wider_delim(siteinfo, names = c(NA, "PhosSites"), delim = "_",
                                   too_few = "align_start")
     phosSite <- phosSite |>
-      extract(siteinfo, into = c("AA", "position"), regex = "([A-Z])(\\d+)", convert = TRUE, remove = FALSE)
+      tidyr::extract("PhosSites", into = c("modAA", "posInProtein"), regex = "([A-Z])(\\d+)", convert = TRUE, remove = FALSE)
   } else if(sitetype == "multisite") {
     phosSite <- phosSite |>
       tidyr::separate_wider_delim(siteinfo, names = c(NA, "startModSite", "endModSite", "NumPhos", "LocalizedNumPhos", "PhosSites"), delim = "_",
