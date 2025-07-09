@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/868215578.svg)](https://doi.org/10.5281/zenodo.15845243)
+
 # Function implementing reading routines for PTM data
 
 This package extends the functionality of the $prolfquapp$ package to support PTM analysis.
