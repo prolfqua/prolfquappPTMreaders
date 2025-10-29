@@ -43,8 +43,8 @@ read_combined_STY_file <- function(file){
 #' @return data.frame
 #' @export
 #'
-dataset_template_FP_combined_STY <- function(files){
-  res_data <- prolfquapp::read_combined_STY_file(files$data)
+dataset_template_FP_combined_STY_v2 <- function(files){
+  res_data <- prolfquappPTMreaders::read_combined_STY_file(files$data)
 
   manifest <- readr::read_tsv(files$fp.manifest, col_names = FALSE)
   colnames(manifest) <- c("raw.file", "Name", "Experiment", "Data_type")
@@ -62,6 +62,30 @@ dataset_template_FP_combined_STY <- function(files){
   return(datasetannot)
 }
 
+#' create dataset tempalte for FP combined STY file
+#' @return data.frame
+#' @export
+#'
+
+dataset_template_FP_combined_STY <- function(files){
+  res_data <- prolfquappPTMreaders::read_combined_STY_file(files$data)
+
+  # manifest <- readr::read_tsv(files$fp.manifest, col_names = FALSE)
+  # colnames(manifest) <- c("raw.file", "Name", "Experiment", "Data_type")
+  # manifest$Experiment <- NULL
+  # manifest$Data_type <- NULL
+
+  # res_data <- dplyr::inner_join(manifest, res_data, by = c(Name = "SampleName"))
+
+  datasetannot <- res_data |>
+    dplyr::select(file = "SampleName", Name = "SampleName") |>
+    dplyr::distinct()
+  datasetannot$Group <- ""
+  datasetannot$Subject <- ""
+  datasetannot$Control <- ""
+  return(datasetannot)
+}
+
 #' preprocess FP multisite, filter by purity_threshold and PeptideProphetProb
 #' @return list with lfqdata and protein annotation
 #' @export
@@ -72,7 +96,7 @@ preprocess_FP_combined_STY <- function(
     annotation,
     pattern_contaminants = "^zz|^CON|Cont_",
     pattern_decoys = "^REV_|^rev_",
-    annotation_join_by = c("raw.file", "Name")
+    annotation_join_by = "SampleName"
 ){
 
   #annotation_join_by <- match.arg(annotation_join_by)
@@ -87,8 +111,8 @@ preprocess_FP_combined_STY <- function(
 
   multiSite_long <- prolfquappPTMreaders::read_combined_STY_file(quant_data)
   # join with anno again this should work now with Name # if not all samples are used in the dataset they would be removed here (to be tested)
-  by = "SampleName"
-  names(by) = annotation_join_by
+  by = annotation_join_by
+  names(by) = annotation$atable$fileName
   multiSite_long <- dplyr::inner_join(x = annotation$annot, y = multiSite_long, by = by)
 
   # add missing required parameters (qvalue)
@@ -120,8 +144,9 @@ preprocess_FP_combined_STY <- function(
     dplyr::distinct()
 
   phosSite <- site_annot |> dplyr::rowwise() |> dplyr::mutate(siteinfo = gsub(ProteinID, "", Index))
-  phosSite <- phosSite |> dplyr::rowwise() |> dplyr::mutate(siteinfo = gsub("^_", "", siteinfo))
-
+  phosSite <- phosSite |> dplyr::rowwise() |> dplyr::mutate(PhosSites = gsub("^_", "", siteinfo))
+  phosSite <- phosSite |>
+    tidyr::extract("PhosSites", into = c("modAA", "posInProtein"), regex = "([A-Z])(\\d+)", convert = TRUE, remove = FALSE)
   nrPep_exp <- multiSite_long |>
     dplyr::select(ProteinID, Peptide) |>
     dplyr::distinct() |>

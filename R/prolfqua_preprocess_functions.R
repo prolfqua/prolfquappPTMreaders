@@ -14,7 +14,7 @@ prolfqua_preprocess_functions <- list(
     dataset = "prolfquappPTMreaders::dataset_template_FP_multi_site"
   ),
   FP_combined_STY = list(
-    extra_args = list(annotation_join_by = c("raw.file", "Name")),
+    extra_args = "list(annotation_join_by = 'SampleName')",
     preprocess = "prolfquappPTMreaders::preprocess_FP_combined_STY",
     get_files = "prolfquappPTMreaders::get_FP_combined_STY_files",
     dataset = "prolfquappPTMreaders::dataset_template_FP_combined_STY"

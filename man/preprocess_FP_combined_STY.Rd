@@ -10,7 +10,7 @@ preprocess_FP_combined_STY(
   annotation,
   pattern_contaminants = "^zz|^CON|Cont_",
   pattern_decoys = "^REV_|^rev_",
-  annotation_join_by = c("raw.file", "Name")
+  annotation_join_by = "SampleName"
 )
 }
 \arguments{
