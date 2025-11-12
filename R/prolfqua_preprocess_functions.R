@@ -18,6 +18,12 @@ prolfqua_preprocess_functions <- list(
     preprocess = "prolfquappPTMreaders::preprocess_FP_combined_STY",
     get_files = "prolfquappPTMreaders::get_FP_combined_STY_files",
     dataset = "prolfquappPTMreaders::dataset_template_FP_combined_STY"
+  ),
+  BGS_site = list(
+    extra_args = "list()",
+    preprocess = "prolfquappPTMreaders::preprocess_BGS_site",
+    get_files = "prolfquappPTMreaders::get_BGS_site_files",
+    dataset = "prolfquappPTMreaders::dataset_template_BGS_site"
   )
 
 )
