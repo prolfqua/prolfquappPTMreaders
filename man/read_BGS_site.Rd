@@ -4,7 +4,7 @@
 \alias{read_BGS_site}
 \title{read Spectronaut PTM report file}
 \usage{
-read_BGS_site(quant_data, min_site_sample_loc = 0, min_site_loc = 0.99999)
+read_BGS_site(quant_data, min_site_sample_loc = 0.5, min_site_loc = 0.95)
 }
 \arguments{
 \item{quant_data}{path to Spectronaut PTM report file}

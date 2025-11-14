@@ -39,7 +39,7 @@ get_BGS_site_files <- function(path){
 #' #View(data)
 #' range(data$PTM_SiteProbability)
 #' unique(data$PTM_ModificationTitle)
-read_BGS_site <- function(quant_data, min_site_sample_loc=0.00, min_site_loc = 0.99999) {
+read_BGS_site <- function(quant_data, min_site_sample_loc=0.5, min_site_loc = 0.95) {
   xx <- readr::read_tsv(quant_data, show_col_types = FALSE)
 
   # Replace dots with underscores in column names for R compatibility
