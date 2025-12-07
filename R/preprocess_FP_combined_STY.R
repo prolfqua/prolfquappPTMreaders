@@ -172,6 +172,9 @@ preprocess_FP_combined_STY <- function(
     pattern_contaminants = pattern_contaminants,
     pattern_decoys = pattern_decoys
   )
+
+  # Verify lfqdata and protein_annotation match on hierarchy keys
+  stopifnot(nrow(dplyr::inner_join(prot_annot$row_annot, lfqdata$data, by = lfqdata$config$table$hierarchy_keys_depth())) > 0)
   return(list(lfqdata = lfqdata , protein_annotation = prot_annot))
 }
 

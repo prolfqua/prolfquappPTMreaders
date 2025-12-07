@@ -39,7 +39,7 @@ get_BGS_site_files <- function(path){
 #' #View(data)
 #' range(data$PTM_SiteProbability)
 #' unique(data$PTM_ModificationTitle)
-read_BGS_site <- function(quant_data, min_site_sample_loc=0.5, min_site_loc = 0.95) {
+read_BGS_site <- function(quant_data, min_site_sample_loc=0.3, min_site_loc = 0.95) {
   xx <- readr::read_tsv(quant_data, show_col_types = FALSE)
 
   # Replace dots with underscores in column names for R compatibility
@@ -123,12 +123,6 @@ preprocess_BGS_site <- function(
   site_long <- read_BGS_site(quant_data)
 
   # Rename only what's needed for prolfqua hierarchy and joining
-  site_long <- site_long |>
-    dplyr::rename(
-      ProteinID = PTM_ProteinId,
-      Index = PTM_CollapseKey,
-      Peptide = PTM_Group
-    )
 
   bw <- "R_FileName"
   names(bw) <- annotation$atable$fileName
@@ -142,12 +136,15 @@ preprocess_BGS_site <- function(
   site_long$nr_children  <- 1
 
 
-  # Setup configuration manually for peptide analysis (phospho)
+  # Setup configuration for site-level analysis (phospho)
+  # Note: BGS data is already aggregated at site level by Spectronaut
+  # PTM_Group contains which peptides were used but there's only 1 quantity per site-sample
   atable$ident_Score = "PTM_SiteProbability"
   atable$ident_qValue = "qValue"
   atable$nr_children = "nr_children"
-  atable$hierarchy[["protein_Id"]] <- c("ProteinID")
-  atable$hierarchy[["site"]] <- c("Index", "Peptide")
+  atable$hierarchy[["protein_Id"]] <- c("PTM_ProteinId")
+  atable$hierarchy[["site"]] <- c("PTM_ProteinId","PTM_CollapseKey", "PTM_SiteAA", "PTM_SiteLocation", "PTM_Multiplicity")
+
   atable$set_response("PTM_Quantity")
   atable$hierarchyDepth <- 2
 
@@ -160,43 +157,36 @@ preprocess_BGS_site <- function(
 
   # Create Site Annotation - one row per site with max PTM_SiteProbability
   site_annot <- site_long |>
-    dplyr::group_by(Index, ProteinID, Peptide, PTM_FlankingRegion,
+    dplyr::group_by(PTM_ProteinId, PTM_CollapseKey, PTM_FlankingRegion,
                     PTM_SiteAA, PTM_SiteLocation,
                     PTM_ModificationTitle, PTM_Multiplicity) |>
     dplyr::summarize(PTM_SiteProbability = max(PTM_SiteProbability, na.rm = TRUE), .groups = "drop") |>
     dplyr::distinct()
 
-  # Parse the Index to extract site information
-  # Format is typically: ProteinID_AA###_M#_#
+  # Create PhosSites column using existing columns
   phosSite <- site_annot |>
-    dplyr::rowwise() |>
-    dplyr::mutate(siteinfo = gsub(paste0("^", ProteinID, "_"), "", Index))
-
-  # Extract position and amino acid from siteinfo (e.g., S595_M1_3 -> S, 595)
-  phosSite <- phosSite |>
-    tidyr::extract("siteinfo", into = c("modAA", "posInProtein", "mult_info"),
-                   regex = "([A-Z])(\\d+)_(M.+)", convert = TRUE, remove = FALSE)
-
-  # Create PhosSites column with format AA###
-  phosSite <- phosSite |>
-    dplyr::mutate(PhosSites = paste0(modAA, posInProtein))
+    dplyr::mutate(PhosSites = paste0(PTM_SiteAA, PTM_SiteLocation))
 
 
   # Count peptides per protein
   nrPep_exp <- site_long |>
-    dplyr::select(ProteinID, Peptide) |>
+    dplyr::select(PTM_ProteinId, PTM_Group) |>
     dplyr::distinct() |>
-    dplyr::group_by(ProteinID) |>
+    dplyr::group_by(PTM_ProteinId) |>
     dplyr::summarize(nrPeptides = dplyr::n()) |> dplyr::ungroup()
 
   fasta_annot <- prolfquapp::get_annot_from_fasta(fasta_file, pattern_decoys = pattern_decoys)
-  fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot, by = c(ProteinID = "proteinname"), multiple = "all")
+  fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot, by = c(PTM_ProteinId = "proteinname"), multiple = "all")
   fasta_annot <- fasta_annot |> dplyr::rename(description = fasta.header)
-  fasta_annot2 <- dplyr::inner_join(fasta_annot, phosSite, by = "ProteinID")
+  fasta_annot2 <- dplyr::inner_join(fasta_annot, phosSite, by = "PTM_ProteinId")
 
-  # Make names to match lfqdata
-  fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!lfqdata$config$table$hierarchy_keys_depth()[1] := !!rlang::sym("ProteinID"))
-  fasta_annot2 <- fasta_annot2 |> dplyr::mutate(!!lfqdata$config$table$hierarchy_keys_depth()[2] := paste(!!rlang::sym("Index"),!!rlang::sym("Peptide"), sep = "~"))
+  # Make names to match lfqdata - must unite same columns as setup_analysis does
+  fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!lfqdata$config$table$hierarchy_keys_depth()[1] := !!rlang::sym("PTM_ProteinId"))
+  fasta_annot2 <- fasta_annot2 |> tidyr::unite(
+    !!lfqdata$config$table$hierarchy_keys_depth()[2],
+    c("protein_Id", "PTM_CollapseKey", "PTM_SiteAA", "PTM_SiteLocation", "PTM_Multiplicity"),
+    sep = "~", remove = FALSE
+  )
 
   prot_annot <- prolfquapp::ProteinAnnotation$new(
     lfqdata ,
@@ -208,5 +198,8 @@ preprocess_BGS_site <- function(
     pattern_contaminants = pattern_contaminants,
     pattern_decoys = pattern_decoys
   )
+
+  #verify
+  stopifnot(nrow(dplyr::inner_join(prot_annot$row_annot, lfqdata$data, by = lfqdata$config$table$hierarchy_keys_depth())) > 0)
   return(list(lfqdata = lfqdata , protein_annotation = prot_annot))
 }
