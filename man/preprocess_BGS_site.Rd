@@ -20,6 +20,7 @@ preprocess Spectronaut PTM site data
 }
 \examples{
 identical(names(formals(preprocess_BGS_site)), names(formals(prolfquapp::preprocess_dummy)))
+\dontrun{
 path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
 files <- get_BGS_site_files(path)
 
@@ -40,5 +41,5 @@ result <- preprocess_BGS_site(
 )
 result$lfqdata
 result$protein_annotation
-
+}
 }

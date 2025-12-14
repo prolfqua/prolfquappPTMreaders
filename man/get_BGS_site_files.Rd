@@ -14,9 +14,11 @@ get Spectronaut report.tsv and fasta file location in folder
 }
 \examples{
 identical(formals(get_BGS_site_files), formals(prolfquapp::get_dummy_files))
+\dontrun{
 path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
 files <- get_BGS_site_files(path)
 files$data
 files$fasta
+}
 
 }

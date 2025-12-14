@@ -5,10 +5,12 @@
 #' @export
 #' @examples
 #' identical(formals(get_BGS_site_files), formals(prolfquapp::get_dummy_files))
+#' \dontrun{
 #' path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
 #' files <- get_BGS_site_files(path)
 #' files$data
 #' files$fasta
+#' }
 #'
 get_BGS_site_files <- function(path){
   # Find Spectronaut PTM report files (typically named *Report_WithProteinRollup.tsv)
@@ -32,6 +34,7 @@ get_BGS_site_files <- function(path){
 #' @return data table with Spectronaut column names (dots replaced with underscores),
 #'   filtered to keep only single phosphorylation sites (PTM_Multiplicity == 1) and high confidence observations
 #' @examples
+#' \dontrun{
 #' path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
 #' files <- get_BGS_site_files(path)
 #' data <- read_BGS_site(files$data, min_site_loc=0.99999)
@@ -39,6 +42,7 @@ get_BGS_site_files <- function(path){
 #' #View(data)
 #' range(data$PTM_SiteProbability)
 #' unique(data$PTM_ModificationTitle)
+#' }
 read_BGS_site <- function(quant_data, min_site_sample_loc=0.3, min_site_loc = 0.95) {
   xx <- readr::read_tsv(quant_data, show_col_types = FALSE)
 
@@ -68,10 +72,12 @@ read_BGS_site <- function(quant_data, min_site_sample_loc=0.3, min_site_loc = 0.
 #' @param files list with data and fasta paths
 #' @return data.frame with annotation template
 #' @examples
+#' \dontrun{
 #' path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
 #' files <- get_BGS_site_files(path)
 #' annot_template <- dataset_template_BGS_site(files)
 #' head(annot_template)
+#' }
 dataset_template_BGS_site <- function(files){
   xx <- read_BGS_site(files$data)
   channels <- unique(xx$R_FileName)
@@ -85,6 +91,7 @@ dataset_template_BGS_site <- function(files){
 #' @export
 #' @examples
 #' identical(names(formals(preprocess_BGS_site)), names(formals(prolfquapp::preprocess_dummy)))
+#' \dontrun{
 #' path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
 #' files <- get_BGS_site_files(path)
 #'
@@ -105,7 +112,7 @@ dataset_template_BGS_site <- function(files){
 #' )
 #' result$lfqdata
 #' result$protein_annotation
-#'
+#' }
 preprocess_BGS_site <- function(
     quant_data,
     fasta_file,
@@ -163,9 +170,7 @@ preprocess_BGS_site <- function(
     dplyr::summarize(PTM_SiteProbability = max(PTM_SiteProbability, na.rm = TRUE), .groups = "drop") |>
     dplyr::distinct()
 
-  # Create PhosSites column using existing columns
-  phosSite <- site_annot |>
-    dplyr::mutate(PhosSites = paste0(PTM_SiteAA, PTM_SiteLocation))
+  # Rename columns to match expected naming convention and create PhosSites
 
 
   # Count peptides per protein
@@ -178,7 +183,7 @@ preprocess_BGS_site <- function(
   fasta_annot <- prolfquapp::get_annot_from_fasta(fasta_file, pattern_decoys = pattern_decoys)
   fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot, by = c(PTM_ProteinId = "proteinname"), multiple = "all")
   fasta_annot <- fasta_annot |> dplyr::rename(description = fasta.header)
-  fasta_annot2 <- dplyr::inner_join(fasta_annot, phosSite, by = "PTM_ProteinId")
+  fasta_annot2 <- dplyr::inner_join(fasta_annot, site_annot, by = "PTM_ProteinId")
 
   # Make names to match lfqdata - must unite same columns as setup_analysis does
   fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!lfqdata$config$table$hierarchy_keys_depth()[1] := !!rlang::sym("PTM_ProteinId"))
@@ -187,6 +192,15 @@ preprocess_BGS_site <- function(
     c("protein_Id", "PTM_CollapseKey", "PTM_SiteAA", "PTM_SiteLocation", "PTM_Multiplicity"),
     sep = "~", remove = FALSE
   )
+
+  fasta_annot2 <- fasta_annot2 |>
+    dplyr::rename(
+      modAA = PTM_SiteAA,
+      posInProtein = PTM_SiteLocation,
+      SequenceWindow = PTM_FlankingRegion
+    ) |>
+    dplyr::mutate(PhosSites = paste0(modAA, posInProtein))
+
 
   prot_annot <- prolfquapp::ProteinAnnotation$new(
     lfqdata ,

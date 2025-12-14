@@ -21,6 +21,7 @@ data table with Spectronaut column names (dots replaced with underscores),
 read Spectronaut PTM report file
 }
 \examples{
+\dontrun{
 path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
 files <- get_BGS_site_files(path)
 data <- read_BGS_site(files$data, min_site_loc=0.99999)
@@ -28,4 +29,5 @@ nrow(data)
 #View(data)
 range(data$PTM_SiteProbability)
 unique(data$PTM_ModificationTitle)
+}
 }
