@@ -1,9 +1,8 @@
 Package: prolfquappPTMreaders
 Type: Package
 Title: prolfquapp Preprocess Functions for FP PTM Outputs
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
-    person("Jonas", "Grossmann", email = "jg@fgcz.ethz.ch", role = c("aut")),
     person("Witold E.", "Wolski", email = "wew@fgcz.ethz.ch", role = c("aut", "cre")))
 Maintainer: Witold E. Wolski <wew@fgcz.ethz.ch>
 Description: Functions for preprocessing data outputs related to PTMs 
