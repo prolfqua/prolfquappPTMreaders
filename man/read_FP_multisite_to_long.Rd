@@ -6,6 +6,12 @@
 \usage{
 read_FP_multisite_to_long(quant_data)
 }
+\arguments{
+\item{quant_data}{path to multisite quantification file}
+}
+\value{
+tidy long-format data frame
+}
 \description{
 read multisite file
 }

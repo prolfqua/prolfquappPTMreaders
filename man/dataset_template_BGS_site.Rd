@@ -16,10 +16,10 @@ data.frame with annotation template
 create dataset template from BGS site file
 }
 \examples{
-\dontrun{
-path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
+# Use package test data
+path <- system.file("extdata", "BGS_site", package = "prolfquappPTMreaders")
 files <- get_BGS_site_files(path)
 annot_template <- dataset_template_BGS_site(files)
 head(annot_template)
-}
+
 }

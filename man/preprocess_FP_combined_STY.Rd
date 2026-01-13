@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocess_FP_combined_STY.R
 \name{preprocess_FP_combined_STY}
 \alias{preprocess_FP_combined_STY}
-\title{preprocess FP multisite, filter by purity_threshold and PeptideProphetProb}
+\title{preprocess FP combined STY file}
 \usage{
 preprocess_FP_combined_STY(
   quant_data,
@@ -14,11 +14,32 @@ preprocess_FP_combined_STY(
 )
 }
 \arguments{
-\item{annotation_join_by}{column in annotation file}
+\item{quant_data}{path to combined_site_STY file}
+
+\item{fasta_file}{path to FASTA file}
+
+\item{annotation}{annotation object from prolfquapp::read_annotation()}
+
+\item{pattern_contaminants}{regex pattern to identify contaminant proteins}
+
+\item{pattern_decoys}{regex pattern to identify decoy proteins}
+
+\item{annotation_join_by}{column in annotation file to join on}
 }
 \value{
 list with lfqdata and protein annotation
 }
 \description{
-preprocess FP multisite, filter by purity_threshold and PeptideProphetProb
+preprocess FP combined STY file
+}
+\examples{
+# Use package test data
+path <- system.file("extdata", "FP_combined_STY", package = "prolfquappPTMreaders")
+files <- get_FP_combined_STY_files(path)
+annot_template <- dataset_template_FP_combined_STY(files)
+annot_template$Group <- ifelse(grepl("37C", annot_template$Name), "37C", "42C")
+annot_template$Control <- ifelse(annot_template$Group == "37C", "C", "T")
+annotation <- prolfquapp::read_annotation(annot_template)
+result <- preprocess_FP_combined_STY(files$data, files$fasta, annotation)
+head(result$protein_annotation$row_annot$SequenceWindow)
 }

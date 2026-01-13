@@ -13,6 +13,19 @@ preprocess_FP_multi_site(
   pattern_decoys = "^REV_|^rev_"
 )
 }
+\arguments{
+\item{quant_data}{path to multisite quantification file}
+
+\item{fasta_file}{path to FASTA file}
+
+\item{annotation}{annotation object from prolfquapp::read_annotation()}
+
+\item{sitetype}{type of site analysis ("singlesite" or "multisite")}
+
+\item{pattern_contaminants}{regex pattern to identify contaminant proteins}
+
+\item{pattern_decoys}{regex pattern to identify decoy proteins}
+}
 \value{
 list with lfqdata and protein annotation
 }

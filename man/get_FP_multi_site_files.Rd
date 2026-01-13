@@ -6,6 +6,9 @@
 \usage{
 get_FP_multi_site_files(path)
 }
+\arguments{
+\item{path}{directory path to search for files}
+}
 \value{
 list with paths to data and fasta
 }

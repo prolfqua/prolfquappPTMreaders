@@ -6,6 +6,9 @@
 \usage{
 get_FP_combined_STY_files(path)
 }
+\arguments{
+\item{path}{directory path to search for files}
+}
 \value{
 list with paths to data and fasta
 }

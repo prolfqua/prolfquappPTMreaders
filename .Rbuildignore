@@ -1,3 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^inst/BGS$
+^\.lintr$
+^\.claude$
+^CLAUDE\.md$

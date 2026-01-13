@@ -1,16 +1,16 @@
 
 
 #' get Spectronaut report.tsv and fasta file location in folder
+#' @param path directory path to search for files
 #' @return list with paths to data and fasta
 #' @export
 #' @examples
 #' identical(formals(get_BGS_site_files), formals(prolfquapp::get_dummy_files))
-#' \dontrun{
-#' path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
+#' # Use package test data
+#' path <- system.file("extdata", "BGS_site", package = "prolfquappPTMreaders")
 #' files <- get_BGS_site_files(path)
 #' files$data
 #' files$fasta
-#' }
 #'
 get_BGS_site_files <- function(path){
   # Find Spectronaut PTM report files (typically named *Report_WithProteinRollup.tsv)
@@ -34,15 +34,14 @@ get_BGS_site_files <- function(path){
 #' @return data table with Spectronaut column names (dots replaced with underscores),
 #'   filtered to keep only single phosphorylation sites (PTM_Multiplicity == 1) and high confidence observations
 #' @examples
-#' \dontrun{
-#' path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
+#' # Use package test data
+#' path <- system.file("extdata", "BGS_site", package = "prolfquappPTMreaders")
 #' files <- get_BGS_site_files(path)
-#' data <- read_BGS_site(files$data, min_site_loc=0.99999)
+#' data <- read_BGS_site(files$data, min_site_loc = 0.75)
 #' nrow(data)
-#' #View(data)
 #' range(data$PTM_SiteProbability)
 #' unique(data$PTM_ModificationTitle)
-#' }
+#'
 read_BGS_site <- function(quant_data, min_site_sample_loc=0.3, min_site_loc = 0.95) {
   xx <- readr::read_tsv(quant_data, show_col_types = FALSE)
 
@@ -72,12 +71,12 @@ read_BGS_site <- function(quant_data, min_site_sample_loc=0.3, min_site_loc = 0.
 #' @param files list with data and fasta paths
 #' @return data.frame with annotation template
 #' @examples
-#' \dontrun{
-#' path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
+#' # Use package test data
+#' path <- system.file("extdata", "BGS_site", package = "prolfquappPTMreaders")
 #' files <- get_BGS_site_files(path)
 #' annot_template <- dataset_template_BGS_site(files)
 #' head(annot_template)
-#' }
+#'
 dataset_template_BGS_site <- function(files){
   xx <- read_BGS_site(files$data)
   channels <- unique(xx$R_FileName)
@@ -87,21 +86,24 @@ dataset_template_BGS_site <- function(files){
 
 
 #' preprocess Spectronaut PTM site data
+#' @param quant_data path to Spectronaut PTM report file
+#' @param fasta_file path to FASTA file
+#' @param annotation annotation object from prolfquapp::read_annotation()
+#' @param pattern_contaminants regex pattern to identify contaminant proteins
+#' @param pattern_decoys regex pattern to identify decoy proteins
 #' @return list with lfqdata and protein annotation
 #' @export
 #' @examples
 #' identical(names(formals(preprocess_BGS_site)), names(formals(prolfquapp::preprocess_dummy)))
-#' \dontrun{
-#' path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
+#' # Use package test data (single sample subset)
+#' path <- system.file("extdata", "BGS_site", package = "prolfquappPTMreaders")
 #' files <- get_BGS_site_files(path)
 #'
 #' # Create annotation
 #' annot <- dataset_template_BGS_site(files)
-#' # Fill in Group and Control columns
-#' # Group A = Control (C), Group B = Treatment (T)
-#' n_samples <- nrow(annot)
-#' annot$Group <- rep(c("A", "B"), length.out = n_samples)
-#' annot$Control <- ifelse(annot$Group == "A", "C", "T")
+#' # Fill in Group and Control columns (test data has single sample)
+#' annot$Group <- "A"
+#' annot$Control <- "C"
 #' annotation <- prolfquapp::read_annotation(annot)
 #'
 #' # Preprocess

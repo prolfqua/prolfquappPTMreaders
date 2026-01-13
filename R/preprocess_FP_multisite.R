@@ -1,5 +1,6 @@
 
 #' get report.tsv and fasta file location in folder
+#' @param path directory path to search for files
 #' @return list with paths to data and fasta
 #' @export
 #' @examples
@@ -20,6 +21,7 @@ get_FP_single_site_files <- function(path){
 
 
 #' get report.tsv and fasta file location in folder
+#' @param path directory path to search for files
 #' @return list with paths to data and fasta
 #' @export
 #' @examples
@@ -41,6 +43,8 @@ get_FP_multi_site_files <- function(path){
 
 
 #' read multisite file
+#' @param quant_data path to multisite quantification file
+#' @return tidy long-format data frame
 #' @export
 read_FP_multisite_to_long <- function(quant_data) {
   xx <- readr::read_tsv(quant_data)
@@ -53,6 +57,8 @@ read_FP_multisite_to_long <- function(quant_data) {
 
 
 #' create dataset template from FP multi_site
+#' @param files list with data and fasta paths
+#' @return data.frame with annotation template
 #' @export
 dataset_template_FP_multi_site <- function(files){
   xx <- read_FP_multisite_to_long(files$data)
@@ -63,6 +69,12 @@ dataset_template_FP_multi_site <- function(files){
 
 
 #' preprocess FP multisite, filter by purity_threshold and PeptideProphetProb
+#' @param quant_data path to multisite quantification file
+#' @param fasta_file path to FASTA file
+#' @param annotation annotation object from prolfquapp::read_annotation()
+#' @param sitetype type of site analysis ("singlesite" or "multisite")
+#' @param pattern_contaminants regex pattern to identify contaminant proteins
+#' @param pattern_decoys regex pattern to identify decoy proteins
 #' @return list with lfqdata and protein annotation
 #' @export
 #' @examples

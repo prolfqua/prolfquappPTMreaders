@@ -6,6 +6,12 @@
 \usage{
 dataset_template_FP_multi_site(files)
 }
+\arguments{
+\item{files}{list with data and fasta paths}
+}
+\value{
+data.frame with annotation template
+}
 \description{
 create dataset template from FP multi_site
 }

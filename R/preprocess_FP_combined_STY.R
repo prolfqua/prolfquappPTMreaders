@@ -2,6 +2,7 @@
 
 
 #' get report.tsv and fasta file location in folder
+#' @param path directory path to search for files
 #' @return list with paths to data and fasta
 #' @export
 get_FP_combined_STY_files <- function(path){
@@ -20,6 +21,7 @@ get_FP_combined_STY_files <- function(path){
 
 
 #' reads combined_site_STY file and converts to long format.
+#' @param file path to combined_site_STY file
 #' @return tidy data table
 #' @export
 #'
@@ -39,8 +41,9 @@ read_combined_STY_file <- function(file){
 }
 
 
-#' create dataset tempalte for FP combined STY file
-#' @return data.frame
+#' create dataset template for FP combined STY file (v2 with manifest)
+#' @param files list with data, fasta and fp.manifest paths
+#' @return data.frame with annotation template
 #' @export
 #'
 dataset_template_FP_combined_STY_v2 <- function(files){
@@ -62,11 +65,11 @@ dataset_template_FP_combined_STY_v2 <- function(files){
   return(datasetannot)
 }
 
-#' create dataset tempalte for FP combined STY file
-#' @return data.frame
+#' create dataset template for FP combined STY file
+#' @param files list with data and fasta paths
+#' @return data.frame with annotation template
 #' @export
 #'
-
 dataset_template_FP_combined_STY <- function(files){
   res_data <- prolfquappPTMreaders::read_combined_STY_file(files$data)
 
@@ -86,10 +89,26 @@ dataset_template_FP_combined_STY <- function(files){
   return(datasetannot)
 }
 
-#' preprocess FP multisite, filter by purity_threshold and PeptideProphetProb
+#' preprocess FP combined STY file
+#' @param quant_data path to combined_site_STY file
+#' @param fasta_file path to FASTA file
+#' @param annotation annotation object from prolfquapp::read_annotation()
+#' @param pattern_contaminants regex pattern to identify contaminant proteins
+#' @param pattern_decoys regex pattern to identify decoy proteins
+#' @param annotation_join_by column in annotation file to join on
 #' @return list with lfqdata and protein annotation
 #' @export
-#' @param annotation_join_by column in annotation file
+#' @examples
+#' # Use package test data
+#' path <- system.file("extdata", "FP_combined_STY", package = "prolfquappPTMreaders")
+#' files <- get_FP_combined_STY_files(path)
+#' annot_template <- dataset_template_FP_combined_STY(files)
+#' annot_template$Group <- ifelse(grepl("37C", annot_template$Name), "37C", "42C")
+#' annot_template$Control <- ifelse(annot_template$Group == "37C", "C", "T")
+#' annotation <- prolfquapp::read_annotation(annot_template)
+#' result <- preprocess_FP_combined_STY(files$data, files$fasta, annotation)
+#' head(result$protein_annotation$row_annot$SequenceWindow)
+
 preprocess_FP_combined_STY <- function(
     quant_data,
     fasta_file,
@@ -106,7 +125,7 @@ preprocess_FP_combined_STY <- function(
   atable <- annotation$atable
   annot <- annot |> dplyr::mutate(
     raw.file = gsub("^x|.d.zip$|.raw$","",
-                    (basename(normalize_path(annot[[atable$fileName]])))
+                    (basename(prolfquapp::normalize_path(annot[[atable$fileName]])))
     ))
 
   multiSite_long <- prolfquappPTMreaders::read_combined_STY_file(quant_data)
@@ -124,7 +143,7 @@ preprocess_FP_combined_STY <- function(
   atable$ident_Score = "Localization_Probability"
   atable$ident_qValue = "qValue"
   atable$nr_children = "nr_children"
-  atable$hierarchy[["protein_Id"]] <- c("ProteinID")
+  atable$hierarchy[["protein_Id"]] <- c("Protein")
   atable$hierarchy[["site"]] <- c("Index", "Peptide")
   atable$set_response("Intensity")
   atable$hierarchyDepth <- 2
@@ -153,20 +172,30 @@ preprocess_FP_combined_STY <- function(
     dplyr::group_by(ProteinID) |>
     dplyr::summarize(nrPeptides = dplyr::n()) |> dplyr::ungroup()
 
-  fasta_annot <- prolfquapp::get_annot_from_fasta(fasta_file, pattern_decoys = pattern_decoys)
+  fasta_annot <- prolfquapp::get_annot_from_fasta(fasta_file, pattern_decoys = pattern_decoys, include_seq = TRUE)
 
   fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot, by = c(ProteinID = "proteinname"), multiple = "all")
   fasta_annot <- fasta_annot |> dplyr::rename(description = fasta.header)
   fasta_annot2 <- dplyr::inner_join(fasta_annot, phosSite, by = "ProteinID")
 
+  # Extract sequence windows from FASTA for BGS compatibility
+  fasta_annot2 <- prophosqua::get_sequence_windows(
+    fasta_annot2,
+    flank_size = 7,
+    sequence = "sequence",
+    pos_in_protein = "posInProtein"
+  )
+  fasta_annot2 <- fasta_annot2 |> dplyr::rename(SequenceWindow = sequence_window)
+
   # Make names to match lfqdata
-  fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!lfqdata$config$table$hierarchy_keys_depth()[1] := !!rlang::sym("ProteinID"))
+  # Rename Protein to match hierarchy key name (setup_analysis creates "protein_Id" column from "Protein")
+  fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!lfqdata$config$table$hierarchy_keys_depth()[1] := !!rlang::sym("Protein"))
   fasta_annot2 <- fasta_annot2 |> dplyr::mutate(!!lfqdata$config$table$hierarchy_keys_depth()[2] := paste(!!rlang::sym("Index"),!!rlang::sym("Peptide"), sep = "~"))
   prot_annot <- prolfquapp::ProteinAnnotation$new(
     lfqdata ,
     fasta_annot2,
     description = "description",
-    cleaned_ids = "protein_Id",
+    cleaned_ids = "ProteinID",
     full_id = "protein_Id",
     exp_nr_children = "nrPeptides",
     pattern_contaminants = pattern_contaminants,

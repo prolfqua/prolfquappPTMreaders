@@ -12,34 +12,20 @@ preprocess_BGS_site(
   pattern_decoys = "^REV_|^rev_"
 )
 }
+\arguments{
+\item{quant_data}{path to Spectronaut PTM report file}
+
+\item{fasta_file}{path to FASTA file}
+
+\item{annotation}{annotation object from prolfquapp::read_annotation()}
+
+\item{pattern_contaminants}{regex pattern to identify contaminant proteins}
+
+\item{pattern_decoys}{regex pattern to identify decoy proteins}
+}
 \value{
 list with lfqdata and protein annotation
 }
 \description{
 preprocess Spectronaut PTM site data
-}
-\examples{
-identical(names(formals(preprocess_BGS_site)), names(formals(prolfquapp::preprocess_dummy)))
-\dontrun{
-path <- "/Users/wolski/Dropbox/DataAnalysis/o40094_Fabienne/specnaut_outputs/SA001PT/20251104_093117_20250610-134014_SA001PO_Report_WPR"
-files <- get_BGS_site_files(path)
-
-# Create annotation
-annot <- dataset_template_BGS_site(files)
-# Fill in Group and Control columns
-# Group A = Control (C), Group B = Treatment (T)
-n_samples <- nrow(annot)
-annot$Group <- rep(c("A", "B"), length.out = n_samples)
-annot$Control <- ifelse(annot$Group == "A", "C", "T")
-annotation <- prolfquapp::read_annotation(annot)
-
-# Preprocess
-result <- preprocess_BGS_site(
-  quant_data = files$data,
-  fasta_file = files$fasta,
-  annotation = annotation
-)
-result$lfqdata
-result$protein_annotation
-}
 }

@@ -7,9 +7,16 @@ Authors@R: c(
 Maintainer: Witold E. Wolski <wew@fgcz.ethz.ch>
 Description: Functions for preprocessing data outputs related to PTMs 
     from the prolfquapp package.
-License: What license is it under? (e.g., GPL-3, MIT + file LICENSE)
+License: MIT + file LICENSE
 Encoding: UTF-8
-LazyData: true
 Imports:
- prolfquapp
+    dplyr,
+    logger,
+    prolfqua,
+    prolfquapp,
+    prophosqua,
+    readr,
+    rlang,
+    tidyr,
+    tidyselect
 RoxygenNote: 7.3.3

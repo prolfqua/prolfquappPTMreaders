@@ -2,13 +2,16 @@
 % Please edit documentation in R/preprocess_FP_combined_STY.R
 \name{dataset_template_FP_combined_STY_v2}
 \alias{dataset_template_FP_combined_STY_v2}
-\title{create dataset tempalte for FP combined STY file}
+\title{create dataset template for FP combined STY file (v2 with manifest)}
 \usage{
 dataset_template_FP_combined_STY_v2(files)
 }
+\arguments{
+\item{files}{list with data, fasta and fp.manifest paths}
+}
 \value{
-data.frame
+data.frame with annotation template
 }
 \description{
-create dataset tempalte for FP combined STY file
+create dataset template for FP combined STY file (v2 with manifest)
 }

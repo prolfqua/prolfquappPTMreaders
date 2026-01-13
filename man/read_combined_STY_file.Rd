@@ -6,6 +6,9 @@
 \usage{
 read_combined_STY_file(file)
 }
+\arguments{
+\item{file}{path to combined_site_STY file}
+}
 \value{
 tidy data table
 }
