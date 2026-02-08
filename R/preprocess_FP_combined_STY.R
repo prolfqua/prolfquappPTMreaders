@@ -167,16 +167,16 @@ preprocess_FP_combined_STY <- function(
   phosSite <- phosSite |>
     tidyr::extract("PhosSites", into = c("modAA", "posInProtein"), regex = "([A-Z])(\\d+)", convert = TRUE, remove = FALSE)
   nrPep_exp <- multiSite_long |>
-    dplyr::select(ProteinID, Peptide) |>
+    dplyr::select(Protein, Peptide) |>
     dplyr::distinct() |>
-    dplyr::group_by(ProteinID) |>
+    dplyr::group_by(Protein) |>
     dplyr::summarize(nrPeptides = dplyr::n()) |> dplyr::ungroup()
 
   fasta_annot <- prolfquapp::get_annot_from_fasta(fasta_file, pattern_decoys = pattern_decoys, include_seq = TRUE)
 
-  fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot, by = c(ProteinID = "proteinname"), multiple = "all")
+  fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot, by = c(Protein = "fasta.id"), multiple = "all")
   fasta_annot <- fasta_annot |> dplyr::rename(description = fasta.header)
-  fasta_annot2 <- dplyr::inner_join(fasta_annot, phosSite, by = "ProteinID")
+  fasta_annot2 <- dplyr::inner_join(fasta_annot, phosSite, by = c("proteinname" = "ProteinID"))
 
   # Extract sequence windows from FASTA for BGS compatibility
   fasta_annot2 <- prophosqua::get_sequence_windows(
@@ -195,7 +195,7 @@ preprocess_FP_combined_STY <- function(
     lfqdata ,
     fasta_annot2,
     description = "description",
-    cleaned_ids = "ProteinID",
+    cleaned_ids = "proteinname",
     full_id = "protein_Id",
     exp_nr_children = "nrPeptides",
     pattern_contaminants = pattern_contaminants,
