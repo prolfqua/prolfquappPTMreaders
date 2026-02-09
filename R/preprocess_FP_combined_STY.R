@@ -107,6 +107,8 @@ dataset_template_FP_combined_STY <- function(files){
 #' annot_template$Control <- ifelse(annot_template$Group == "37C", "C", "T")
 #' annotation <- prolfquapp::read_annotation(annot_template)
 #' result <- preprocess_FP_combined_STY(files$data, files$fasta, annotation)
+#' stopifnot(nrow(result$lfqdata$data) > 0)
+#' stopifnot(nrow(result$protein_annotation$row_annot) > 0)
 #' head(result$protein_annotation$row_annot$SequenceWindow)
 
 preprocess_FP_combined_STY <- function(
@@ -134,6 +136,13 @@ preprocess_FP_combined_STY <- function(
   names(by) = annotation$atable$fileName
   multiSite_long <- dplyr::inner_join(x = annotation$annot, y = multiSite_long, by = by)
 
+  # Map short ProteinID to full FASTA ID (sp|ACC|NAME) for consistency with preprocess_FP_multi_site
+  fasta_annot_early <- prolfquapp::get_annot_from_fasta(fasta_file, pattern_decoys = pattern_decoys, include_seq = TRUE)
+  id_map <- fasta_annot_early |> dplyr::select(proteinname, fasta.id) |> dplyr::distinct()
+  multiSite_long <- dplyr::left_join(multiSite_long, id_map, by = c("ProteinID" = "proteinname"))
+  # Use full FASTA ID where available, fall back to ProteinID
+  multiSite_long$Protein <- ifelse(is.na(multiSite_long$fasta.id), multiSite_long$ProteinID, multiSite_long$fasta.id)
+
   # add missing required parameters (qvalue)
   multiSite_long$qValue <- 0
   multiSite_long$nr_children  <- 1
@@ -159,7 +168,7 @@ preprocess_FP_combined_STY <- function(
   # Create fasta annotation
   # Create Site Annotation
   site_annot <- multiSite_long |>
-    dplyr::select(c("Index", "Protein", "ProteinID", "Peptide", "BLP")) |>
+    dplyr::select(c("Index", "ProteinID", "Peptide", "BLP")) |>
     dplyr::distinct()
 
   phosSite <- site_annot |> dplyr::rowwise() |> dplyr::mutate(siteinfo = gsub(ProteinID, "", Index))
@@ -172,9 +181,7 @@ preprocess_FP_combined_STY <- function(
     dplyr::group_by(Protein) |>
     dplyr::summarize(nrPeptides = dplyr::n()) |> dplyr::ungroup()
 
-  fasta_annot <- prolfquapp::get_annot_from_fasta(fasta_file, pattern_decoys = pattern_decoys, include_seq = TRUE)
-
-  fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot, by = c(Protein = "fasta.id"), multiple = "all")
+  fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot_early, by = c(Protein = "fasta.id"), multiple = "all")
   fasta_annot <- fasta_annot |> dplyr::rename(description = fasta.header)
   fasta_annot2 <- dplyr::inner_join(fasta_annot, phosSite, by = c("proteinname" = "ProteinID"))
 

@@ -29,3 +29,25 @@ list with lfqdata and protein annotation
 \description{
 preprocess Spectronaut PTM site data
 }
+\examples{
+identical(names(formals(preprocess_BGS_site)), names(formals(prolfquapp::preprocess_dummy)))
+# Use package test data (single sample subset)
+path <- system.file("extdata", "BGS_site", package = "prolfquappPTMreaders")
+files <- get_BGS_site_files(path)
+
+# Create annotation
+annot <- dataset_template_BGS_site(files)
+# Fill in Group and Control columns (test data has single sample)
+annot$Group <- "A"
+annot$Control <- "C"
+annotation <- prolfquapp::read_annotation(annot)
+
+# Preprocess
+result <- preprocess_BGS_site(
+  quant_data = files$data,
+  fasta_file = files$fasta,
+  annotation = annotation
+)
+stopifnot(nrow(result$lfqdata$data) > 0)
+stopifnot(nrow(result$protein_annotation$row_annot) > 0)
+}

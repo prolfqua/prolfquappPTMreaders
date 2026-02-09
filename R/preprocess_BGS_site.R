@@ -112,9 +112,8 @@ dataset_template_BGS_site <- function(files){
 #'   fasta_file = files$fasta,
 #'   annotation = annotation
 #' )
-#' result$lfqdata
-#' result$protein_annotation
-#' }
+#' stopifnot(nrow(result$lfqdata$data) > 0)
+#' stopifnot(nrow(result$protein_annotation$row_annot) > 0)
 preprocess_BGS_site <- function(
     quant_data,
     fasta_file,

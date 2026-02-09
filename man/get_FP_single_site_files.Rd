@@ -17,5 +17,8 @@ get report.tsv and fasta file location in folder
 }
 \examples{
 identical(formals(get_FP_multi_site_files), formals(prolfquapp::get_dummy_files))
+path <- system.file("extdata", "FP_multisite", package = "prolfquappPTMreaders")
+files <- get_FP_single_site_files(path)
+basename(files$data)
 
 }

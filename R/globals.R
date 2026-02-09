@@ -3,8 +3,8 @@
 utils::globalVariables(c(
 
   # Common columns
-  "Index", "Peptide", "ProteinID", "fasta.header", "sequence_window", "siteinfo",
-  "modAA", "posInProtein",
+  "Index", "Peptide", "Protein", "ProteinID", "fasta.id", "fasta.header",
+  "proteinname", "sequence_window", "siteinfo", "modAA", "posInProtein",
 
 
   # BGS-specific columns

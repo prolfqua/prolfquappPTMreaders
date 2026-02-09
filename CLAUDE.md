@@ -14,6 +14,15 @@ devtools::install()    # Install locally
 devtools::check()      # R CMD check
 ```
 
+A `Makefile` is provided with convenient targets. **Run `make check-fast` (or `make check`) periodically** to catch errors, warnings, and NOTEs early:
+
+```bash
+make check-fast   # R CMD check without vignettes (quick)
+make check        # Full R CMD check including vignettes
+make test         # Run testthat tests only
+make lint         # Run lintr
+```
+
 ## Supported Formats
 
 The package handles four PTM data sources (see `R/prolfqua_preprocess_functions.R` for config):

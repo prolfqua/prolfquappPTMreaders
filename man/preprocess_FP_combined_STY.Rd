@@ -41,5 +41,7 @@ annot_template$Group <- ifelse(grepl("37C", annot_template$Name), "37C", "42C")
 annot_template$Control <- ifelse(annot_template$Group == "37C", "C", "T")
 annotation <- prolfquapp::read_annotation(annot_template)
 result <- preprocess_FP_combined_STY(files$data, files$fasta, annotation)
+stopifnot(nrow(result$lfqdata$data) > 0)
+stopifnot(nrow(result$protein_annotation$row_annot) > 0)
 head(result$protein_annotation$row_annot$SequenceWindow)
 }

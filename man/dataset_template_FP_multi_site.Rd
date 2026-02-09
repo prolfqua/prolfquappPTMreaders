@@ -15,3 +15,10 @@ data.frame with annotation template
 \description{
 create dataset template from FP multi_site
 }
+\examples{
+path <- system.file("extdata", "FP_multisite", package = "prolfquappPTMreaders")
+files <- get_FP_multi_site_files(path)
+annot_template <- dataset_template_FP_multi_site(files)
+annot_template
+
+}

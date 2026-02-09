@@ -35,4 +35,30 @@ preprocess FP multisite, filter by purity_threshold and PeptideProphetProb
 \examples{
 identical(names(formals(preprocess_FP_multi_site)), names(formals(prolfquapp::preprocess_dummy)))
 
+# Multisite example
+path <- system.file("extdata", "FP_multisite", package = "prolfquappPTMreaders")
+files <- get_FP_multi_site_files(path)
+annot_template <- dataset_template_FP_multi_site(files)
+annot_template$Group <- ifelse(grepl("^WT", annot_template$Name), "WT", "KO")
+annot_template$Subject <- gsub(".*_(\\\\d+)$", "\\\\1", annot_template$Name)
+annot_template$CONTROL <- ifelse(annot_template$Group == "WT", "C", "T")
+annotation <- prolfquapp::read_annotation(annot_template)
+result <- preprocess_FP_multi_site(files$data, files$fasta, annotation, sitetype = "multisite")
+stopifnot(nrow(result$lfqdata$data) > 0)
+stopifnot(nrow(result$protein_annotation$row_annot) > 0)
+
+# Singlesite example
+files_single <- get_FP_single_site_files(path)
+annot_template_s <- dataset_template_FP_multi_site(files_single)
+annot_template_s$Group <- ifelse(grepl("^WT", annot_template_s$Name), "WT", "KO")
+annot_template_s$Subject <- gsub(".*_(\\\\d+)$", "\\\\1", annot_template_s$Name)
+annot_template_s$CONTROL <- ifelse(annot_template_s$Group == "WT", "C", "T")
+annotation_s <- prolfquapp::read_annotation(annot_template_s)
+result_s <- preprocess_FP_multi_site(
+  files_single$data, files_single$fasta,
+  annotation_s, sitetype = "singlesite"
+)
+stopifnot(nrow(result_s$lfqdata$data) > 0)
+stopifnot(nrow(result_s$protein_annotation$row_annot) > 0)
+
 }

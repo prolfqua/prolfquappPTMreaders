@@ -4,3 +4,4 @@
 ^\.lintr$
 ^\.claude$
 ^CLAUDE\.md$
+^Makefile$
