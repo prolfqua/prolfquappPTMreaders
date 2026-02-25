@@ -19,4 +19,12 @@ Imports:
     rlang,
     tidyr,
     tidyselect
+Suggests:
+    covr,
+    devtools,
+    lintr,
+    pkgdown,
+    rcmdcheck,
+    roxygen2,
+    testthat (>= 3.0.0)
 RoxygenNote: 7.3.3

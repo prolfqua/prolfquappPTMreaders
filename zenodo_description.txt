@@ -1,0 +1,7 @@
+prolfquappPTMreaders is an R package that extends prolfquapp with reader functions and preprocessing pipelines for Post-Translational Modification (PTM) data. It supports FragPipe (multi-site, single-site, and combined STY) and Spectronaut (BGS) output formats, transforming them into standardized prolfqua/prolfquapp data structures for downstream differential PTM analysis.
+
+Changes since v0.2.0:
+- Added test data and runnable examples for FP multisite/singlesite formats
+- Added test data for FP combined STY and BGS site formats
+- Bug fixes for FragPipe readers
+- Version bump to 0.3.0
