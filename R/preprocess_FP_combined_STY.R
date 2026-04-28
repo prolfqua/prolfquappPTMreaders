@@ -124,16 +124,16 @@ preprocess_FP_combined_STY <- function(
   # pattern_contaminants = "^zz|^CON"
 
   annot <- annotation$annot
-  atable <- annotation$atable
+  config <- annotation$atable$clone(deep = TRUE)
   annot <- annot |> dplyr::mutate(
     raw.file = gsub("^x|.d.zip$|.raw$","",
-                    (basename(prolfquapp::normalize_path(annot[[atable$fileName]])))
+                    (basename(prolfquapp::normalize_path(annot[[config$file_name]])))
     ))
 
   multiSite_long <- prolfquappPTMreaders::read_combined_STY_file(quant_data)
   # join with anno again this should work now with Name # if not all samples are used in the dataset they would be removed here (to be tested)
   by = annotation_join_by
-  names(by) = annotation$atable$fileName
+  names(by) = annotation$atable$file_name
   multiSite_long <- dplyr::inner_join(x = annotation$annot, y = multiSite_long, by = by)
 
   # Map short ProteinID to full FASTA ID (sp|ACC|NAME) for consistency with preprocess_FP_multi_site
@@ -149,16 +149,15 @@ preprocess_FP_combined_STY <- function(
 
 
   # Setup configuration manually for peptide analysis (phospho)
-  atable$ident_Score = "Localization_Probability"
-  atable$ident_qValue = "qValue"
-  atable$nr_children = "nr_children"
-  atable$hierarchy[["protein_Id"]] <- c("Protein")
-  atable$hierarchy[["site"]] <- c("Index", "Peptide")
-  atable$set_response("Intensity")
-  atable$hierarchyDepth <- 2
+  config$ident_score = "Localization_Probability"
+  config$ident_q_value = "qValue"
+  config$nr_children = "nr_children"
+  config$hierarchy[["protein_Id"]] <- c("Protein")
+  config$hierarchy[["site"]] <- c("Index", "Peptide")
+  config$set_response("Intensity")
+  config$hierarchy_depth <- 2
 
   # Preprocess data - aggregate proteins.
-  config <- prolfqua::AnalysisConfiguration$new(atable)
   adata <- prolfqua::setup_analysis(multiSite_long, config)
 
   lfqdata <- prolfqua::LFQData$new(adata, config)
@@ -196,8 +195,9 @@ preprocess_FP_combined_STY <- function(
 
   # Make names to match lfqdata
   # Rename Protein to match hierarchy key name (setup_analysis creates "protein_Id" column from "Protein")
-  fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!lfqdata$config$table$hierarchy_keys_depth()[1] := !!rlang::sym("Protein"))
-  fasta_annot2 <- fasta_annot2 |> dplyr::mutate(!!lfqdata$config$table$hierarchy_keys_depth()[2] := paste(!!rlang::sym("Index"),!!rlang::sym("Peptide"), sep = "~"))
+  hierarchy_keys <- lfqdata$relevant_hierarchy_keys()
+  fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!hierarchy_keys[1] := !!rlang::sym("Protein"))
+  fasta_annot2 <- fasta_annot2 |> dplyr::mutate(!!hierarchy_keys[2] := paste(!!rlang::sym("Index"),!!rlang::sym("Peptide"), sep = "~"))
   prot_annot <- prolfquapp::ProteinAnnotation$new(
     lfqdata ,
     fasta_annot2,
@@ -210,7 +210,6 @@ preprocess_FP_combined_STY <- function(
   )
 
   # Verify lfqdata and protein_annotation match on hierarchy keys
-  stopifnot(nrow(dplyr::inner_join(prot_annot$row_annot, lfqdata$data, by = lfqdata$config$table$hierarchy_keys_depth())) > 0)
+  stopifnot(nrow(dplyr::inner_join(prot_annot$row_annot, lfqdata$data_long(), by = hierarchy_keys)) > 0)
   return(list(lfqdata = lfqdata , protein_annotation = prot_annot))
 }
-

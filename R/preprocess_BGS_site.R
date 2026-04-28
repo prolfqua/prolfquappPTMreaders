@@ -122,10 +122,10 @@ preprocess_BGS_site <- function(
     pattern_decoys = "^REV_|^rev_"){
 
   annot <- annotation$annot
-  atable <- annotation$atable
+  config <- annotation$atable$clone(deep = TRUE)
   annot <- annot |> dplyr::mutate(
     raw.file = gsub("^x|.d.zip$|.raw$","",
-                    (basename(annot[[atable$fileName]]))
+                    (basename(annot[[config$file_name]]))
     ))
 
   site_long <- read_BGS_site(quant_data)
@@ -133,7 +133,7 @@ preprocess_BGS_site <- function(
   # Rename only what's needed for prolfqua hierarchy and joining
 
   bw <- "R_FileName"
-  names(bw) <- annotation$atable$fileName
+  names(bw) <- annotation$atable$file_name
 
   # join with annotation
   site_long <- dplyr::inner_join(x = annotation$annot, y = site_long, by = bw)
@@ -147,17 +147,16 @@ preprocess_BGS_site <- function(
   # Setup configuration for site-level analysis (phospho)
   # Note: BGS data is already aggregated at site level by Spectronaut
   # PTM_Group contains which peptides were used but there's only 1 quantity per site-sample
-  atable$ident_Score = "PTM_SiteProbability"
-  atable$ident_qValue = "qValue"
-  atable$nr_children = "nr_children"
-  atable$hierarchy[["protein_Id"]] <- c("PTM_ProteinId")
-  atable$hierarchy[["site"]] <- c("PTM_ProteinId","PTM_CollapseKey", "PTM_SiteAA", "PTM_SiteLocation", "PTM_Multiplicity")
+  config$ident_score = "PTM_SiteProbability"
+  config$ident_q_value = "qValue"
+  config$nr_children = "nr_children"
+  config$hierarchy[["protein_Id"]] <- c("PTM_ProteinId")
+  config$hierarchy[["site"]] <- c("PTM_ProteinId","PTM_CollapseKey", "PTM_SiteAA", "PTM_SiteLocation", "PTM_Multiplicity")
 
-  atable$set_response("PTM_Quantity")
-  atable$hierarchyDepth <- 2
+  config$set_response("PTM_Quantity")
+  config$hierarchy_depth <- 2
 
   # Preprocess data - setup analysis
-  config <- prolfqua::AnalysisConfiguration$new(atable)
   adata <- prolfqua::setup_analysis(site_long, config)
   lfqdata <- prolfqua::LFQData$new(adata, config)
   lfqdata$remove_small_intensities(threshold = 1)
@@ -187,9 +186,10 @@ preprocess_BGS_site <- function(
   fasta_annot2 <- dplyr::inner_join(fasta_annot, site_annot, by = "PTM_ProteinId")
 
   # Make names to match lfqdata - must unite same columns as setup_analysis does
-  fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!lfqdata$config$table$hierarchy_keys_depth()[1] := !!rlang::sym("PTM_ProteinId"))
+  hierarchy_keys <- lfqdata$relevant_hierarchy_keys()
+  fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!hierarchy_keys[1] := !!rlang::sym("PTM_ProteinId"))
   fasta_annot2 <- fasta_annot2 |> tidyr::unite(
-    !!lfqdata$config$table$hierarchy_keys_depth()[2],
+    !!hierarchy_keys[2],
     c("protein_Id", "PTM_CollapseKey", "PTM_SiteAA", "PTM_SiteLocation", "PTM_Multiplicity"),
     sep = "~", remove = FALSE
   )
@@ -215,6 +215,6 @@ preprocess_BGS_site <- function(
   )
 
   #verify
-  stopifnot(nrow(dplyr::inner_join(prot_annot$row_annot, lfqdata$data, by = lfqdata$config$table$hierarchy_keys_depth())) > 0)
+  stopifnot(nrow(dplyr::inner_join(prot_annot$row_annot, lfqdata$data_long(), by = hierarchy_keys)) > 0)
   return(list(lfqdata = lfqdata , protein_annotation = prot_annot))
 }
