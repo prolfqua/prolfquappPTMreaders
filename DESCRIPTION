@@ -27,4 +27,8 @@ Suggests:
     rcmdcheck,
     roxygen2,
     testthat (>= 3.0.0)
+Remotes:
+    github::fgcz/prolfqua,
+    github::prolfqua/prolfquapp,
+    github::prolfqua/prophosqua
 RoxygenNote: 7.3.3
