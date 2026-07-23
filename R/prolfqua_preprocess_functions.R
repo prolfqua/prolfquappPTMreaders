@@ -25,7 +25,4 @@ prolfqua_preprocess_functions <- list(
     get_files = "prolfquappPTMreaders::get_BGS_site_files",
     dataset = "prolfquappPTMreaders::dataset_template_BGS_site"
   )
-
 )
-
-

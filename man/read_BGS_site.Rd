@@ -11,7 +11,8 @@ read_BGS_site(quant_data, min_site_sample_loc = 0.3, min_site_loc = 0.95)
 
 \item{min_site_sample_loc}{minimum site probability threshold for individual observations (default: 0.00)}
 
-\item{min_site_loc}{minimum site probability threshold - keep only sites where at least one sample exceeds this (default: 0.99)}
+\item{min_site_loc}{minimum site probability threshold - keep only sites where at least one sample
+exceeds this (default: 0.99)}
 }
 \value{
 data table with Spectronaut column names (dots replaced with underscores),

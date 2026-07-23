@@ -1,5 +1,3 @@
-
-
 #' get Spectronaut report.tsv and fasta file location in folder
 #' @param path directory path to search for files
 #' @return list with paths to data and fasta
@@ -12,10 +10,19 @@
 #' files$data
 #' files$fasta
 #'
-get_BGS_site_files <- function(path){
+get_BGS_site_files <- function(path) {
   # Find Spectronaut PTM report files (typically named *Report_WithProteinRollup.tsv)
-  psm_file <- dir(path = path, pattern = "Report.*\\.tsv$", recursive = TRUE, full.names = TRUE)
-  fasta.files <- grep("*.fasta$|*.fas$", dir(path = path, recursive = TRUE,full.names = TRUE), value = TRUE)
+  psm_file <- dir(
+    path = path,
+    pattern = "Report.*\\.tsv$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  fasta.files <- grep(
+    "*.fasta$|*.fas$",
+    dir(path = path, recursive = TRUE, full.names = TRUE),
+    value = TRUE
+  )
   if (any(grepl("database[0-9]*.fasta$", fasta.files))) {
     fasta.files <- grep("database[0-9]*.fasta$", fasta.files, value = TRUE)
   }
@@ -30,7 +37,8 @@ get_BGS_site_files <- function(path){
 #' @export
 #' @param quant_data path to Spectronaut PTM report file
 #' @param min_site_sample_loc minimum site probability threshold for individual observations (default: 0.00)
-#' @param min_site_loc minimum site probability threshold - keep only sites where at least one sample exceeds this (default: 0.99)
+#' @param min_site_loc minimum site probability threshold - keep only sites where at least one sample
+#'   exceeds this (default: 0.99)
 #' @return data table with Spectronaut column names (dots replaced with underscores),
 #'   filtered to keep only single phosphorylation sites (PTM_Multiplicity == 1) and high confidence observations
 #' @examples
@@ -42,7 +50,11 @@ get_BGS_site_files <- function(path){
 #' range(data$PTM_SiteProbability)
 #' unique(data$PTM_ModificationTitle)
 #'
-read_BGS_site <- function(quant_data, min_site_sample_loc=0.3, min_site_loc = 0.95) {
+read_BGS_site <- function(
+  quant_data,
+  min_site_sample_loc = 0.3,
+  min_site_loc = 0.95
+) {
   xx <- readr::read_tsv(quant_data, show_col_types = FALSE)
 
   # Replace dots with underscores in column names for R compatibility
@@ -77,10 +89,15 @@ read_BGS_site <- function(quant_data, min_site_sample_loc=0.3, min_site_loc = 0.
 #' annot_template <- dataset_template_BGS_site(files)
 #' head(annot_template)
 #'
-dataset_template_BGS_site <- function(files){
+dataset_template_BGS_site <- function(files) {
   xx <- read_BGS_site(files$data)
   channels <- unique(xx$R_FileName)
-  dataset <- data.frame(raw.file = channels, Name = channels, Group = NA, Control = NA)
+  dataset <- data.frame(
+    raw.file = channels,
+    Name = channels,
+    Group = NA,
+    Control = NA
+  )
   return(dataset)
 }
 
@@ -115,18 +132,22 @@ dataset_template_BGS_site <- function(files){
 #' stopifnot(nrow(result$lfqdata$data) > 0)
 #' stopifnot(nrow(result$protein_annotation$row_annot) > 0)
 preprocess_BGS_site <- function(
-    quant_data,
-    fasta_file,
-    annotation,
-    pattern_contaminants = "^zz|^CON|Cont_",
-    pattern_decoys = "^REV_|^rev_"){
-
+  quant_data,
+  fasta_file,
+  annotation,
+  pattern_contaminants = "^zz|^CON|Cont_",
+  pattern_decoys = "^REV_|^rev_"
+) {
   annot <- annotation$annot
   config <- annotation$atable$clone(deep = TRUE)
-  annot <- annot |> dplyr::mutate(
-    raw.file = gsub("^x|.d.zip$|.raw$","",
-                    (basename(annot[[config$file_name]]))
-    ))
+  annot <- annot |>
+    dplyr::mutate(
+      raw.file = gsub(
+        "^x|.d.zip$|.raw$",
+        "",
+        (basename(annot[[config$file_name]]))
+      )
+    )
 
   site_long <- read_BGS_site(quant_data)
 
@@ -141,17 +162,22 @@ preprocess_BGS_site <- function(
   # add missing required parameters (qvalue)
   # Use 1 - PTM_SiteProbability as qValue (lower is better)
   site_long$qValue <- 1 - site_long$PTM_SiteProbability
-  site_long$nr_children  <- 1
-
+  site_long$nr_children <- 1
 
   # Setup configuration for site-level analysis (phospho)
   # Note: BGS data is already aggregated at site level by Spectronaut
   # PTM_Group contains which peptides were used but there's only 1 quantity per site-sample
-  config$ident_score = "PTM_SiteProbability"
-  config$ident_q_value = "qValue"
-  config$nr_children = "nr_children"
+  config$ident_score <- "PTM_SiteProbability"
+  config$ident_q_value <- "qValue"
+  config$nr_children <- "nr_children"
   config$hierarchy[["protein_Id"]] <- c("PTM_ProteinId")
-  config$hierarchy[["site"]] <- c("PTM_ProteinId","PTM_CollapseKey", "PTM_SiteAA", "PTM_SiteLocation", "PTM_Multiplicity")
+  config$hierarchy[["site"]] <- c(
+    "PTM_ProteinId",
+    "PTM_CollapseKey",
+    "PTM_SiteAA",
+    "PTM_SiteLocation",
+    "PTM_Multiplicity"
+  )
 
   config$set_response("PTM_Quantity")
   config$hierarchy_depth <- 2
@@ -161,38 +187,67 @@ preprocess_BGS_site <- function(
   lfqdata <- prolfqua::LFQData$new(adata, config)
   lfqdata$remove_small_intensities(threshold = 1)
 
-
   # Create Site Annotation - one row per site with max PTM_SiteProbability
   site_annot <- site_long |>
-    dplyr::group_by(PTM_ProteinId, PTM_CollapseKey, PTM_FlankingRegion,
-                    PTM_SiteAA, PTM_SiteLocation,
-                    PTM_ModificationTitle, PTM_Multiplicity) |>
-    dplyr::summarize(PTM_SiteProbability = max(PTM_SiteProbability, na.rm = TRUE), .groups = "drop") |>
+    dplyr::group_by(
+      PTM_ProteinId,
+      PTM_CollapseKey,
+      PTM_FlankingRegion,
+      PTM_SiteAA,
+      PTM_SiteLocation,
+      PTM_ModificationTitle,
+      PTM_Multiplicity
+    ) |>
+    dplyr::summarize(
+      PTM_SiteProbability = max(PTM_SiteProbability, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
     dplyr::distinct()
 
   # Rename columns to match expected naming convention and create PhosSites
-
 
   # Count peptides per protein
   nrPep_exp <- site_long |>
     dplyr::select(PTM_ProteinId, PTM_Group) |>
     dplyr::distinct() |>
     dplyr::group_by(PTM_ProteinId) |>
-    dplyr::summarize(nrPeptides = dplyr::n()) |> dplyr::ungroup()
+    dplyr::summarize(nrPeptides = dplyr::n()) |>
+    dplyr::ungroup()
 
-  fasta_annot <- prolfquapp::get_annot_from_fasta(fasta_file, pattern_decoys = pattern_decoys)
-  fasta_annot <- dplyr::left_join(nrPep_exp, fasta_annot, by = c(PTM_ProteinId = "proteinname"), multiple = "all")
+  fasta_annot <- prolfquapp::get_annot_from_fasta(
+    fasta_file,
+    pattern_decoys = pattern_decoys
+  )
+  fasta_annot <- dplyr::left_join(
+    nrPep_exp,
+    fasta_annot,
+    by = c(PTM_ProteinId = "proteinname"),
+    multiple = "all"
+  )
   fasta_annot <- fasta_annot |> dplyr::rename(description = fasta.header)
-  fasta_annot2 <- dplyr::inner_join(fasta_annot, site_annot, by = "PTM_ProteinId")
+  fasta_annot2 <- dplyr::inner_join(
+    fasta_annot,
+    site_annot,
+    by = "PTM_ProteinId"
+  )
 
   # Make names to match lfqdata - must unite same columns as setup_analysis does
   hierarchy_keys <- lfqdata$relevant_hierarchy_keys()
-  fasta_annot2 <- fasta_annot2 |> dplyr::rename(!!hierarchy_keys[1] := !!rlang::sym("PTM_ProteinId"))
-  fasta_annot2 <- fasta_annot2 |> tidyr::unite(
-    !!hierarchy_keys[2],
-    c("protein_Id", "PTM_CollapseKey", "PTM_SiteAA", "PTM_SiteLocation", "PTM_Multiplicity"),
-    sep = "~", remove = FALSE
-  )
+  fasta_annot2 <- fasta_annot2 |>
+    dplyr::rename(!!hierarchy_keys[1] := !!rlang::sym("PTM_ProteinId"))
+  fasta_annot2 <- fasta_annot2 |>
+    tidyr::unite(
+      !!hierarchy_keys[2],
+      c(
+        "protein_Id",
+        "PTM_CollapseKey",
+        "PTM_SiteAA",
+        "PTM_SiteLocation",
+        "PTM_Multiplicity"
+      ),
+      sep = "~",
+      remove = FALSE
+    )
 
   fasta_annot2 <- fasta_annot2 |>
     dplyr::rename(
@@ -202,9 +257,8 @@ preprocess_BGS_site <- function(
     ) |>
     dplyr::mutate(PhosSites = paste0(modAA, posInProtein))
 
-
   prot_annot <- prolfquapp::ProteinAnnotation$new(
-    lfqdata ,
+    lfqdata,
     fasta_annot2,
     description = "description",
     cleaned_ids = "protein_Id",
@@ -215,6 +269,13 @@ preprocess_BGS_site <- function(
   )
 
   #verify
-  stopifnot(nrow(dplyr::inner_join(prot_annot$row_annot, lfqdata$data_long(), by = hierarchy_keys)) > 0)
-  return(list(lfqdata = lfqdata , protein_annotation = prot_annot))
+  stopifnot(
+    nrow(dplyr::inner_join(
+      prot_annot$row_annot,
+      lfqdata$data_long(),
+      by = hierarchy_keys
+    )) >
+      0
+  )
+  return(list(lfqdata = lfqdata, protein_annotation = prot_annot))
 }
