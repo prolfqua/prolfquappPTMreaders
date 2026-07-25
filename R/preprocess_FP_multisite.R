@@ -152,7 +152,7 @@ preprocess_FP_multi_site <- function(
   pattern_contaminants = "^zz|^CON|Cont_",
   pattern_decoys = "^REV_|^rev_"
 ) {
-  sitetype <- match.arg(sitetype)
+  match.arg(sitetype)
   annot <- annotation$annot
   config <- annotation$atable$clone(deep = TRUE)
   annot <- annot |>
@@ -181,25 +181,11 @@ preprocess_FP_multi_site <- function(
   multiSite_long$qValue <- 1 - multiSite_long$MaxPepProb
   multiSite_long$nr_children <- 1
 
-  # Map short ProteinID to full FASTA ID (sp|ACC|NAME) for consistency with preprocess_FP_PSM
   fasta_annot_early <- prolfquapp::get_annot_from_fasta(
     fasta_file,
     pattern_decoys = pattern_decoys
   )
-  id_map <- fasta_annot_early |>
-    dplyr::select(proteinname, fasta.id) |>
-    dplyr::distinct()
-  multiSite_long <- dplyr::left_join(
-    multiSite_long,
-    id_map,
-    by = c("ProteinID" = "proteinname")
-  )
-  # Use full FASTA ID where available, fall back to ProteinID
-  multiSite_long$Protein <- ifelse(
-    is.na(multiSite_long$fasta.id),
-    multiSite_long$ProteinID,
-    multiSite_long$fasta.id
-  )
+  multiSite_long$Protein <- multiSite_long$ProteinID
 
   # Setup configuration manually for peptide analysis (phospho)
   config$ident_score <- "MaxPepProb"
@@ -215,64 +201,6 @@ preprocess_FP_multi_site <- function(
   lfqdata <- prolfqua::LFQData$new(adata, config)
   lfqdata$remove_small_intensities(threshold = 1)
 
-  # Create fasta annotation
-  # Create Site Annotation
-  site_annot <- multiSite_long |>
-    dplyr::select(c(
-      "Index",
-      "ProteinID",
-      "Peptide",
-      "SequenceWindow",
-      "Start",
-      "End",
-      "MaxPepProb",
-      "ReferenceIntensity"
-    )) |>
-    dplyr::distinct()
-  phosSite <- site_annot |>
-    dplyr::rowwise() |>
-    dplyr::mutate(siteinfo = gsub(ProteinID, "", Index))
-
-  if (sitetype == "singlesite") {
-    phosSite <- phosSite |>
-      tidyr::separate_wider_delim(
-        siteinfo,
-        names = c(NA, "PhosSites"),
-        delim = "_",
-        too_few = "align_start"
-      )
-    phosSite <- phosSite |>
-      tidyr::extract(
-        "PhosSites",
-        into = c("modAA", "posInProtein"),
-        regex = "([A-Z])(\\d+)",
-        convert = TRUE,
-        remove = FALSE
-      )
-  } else if (sitetype == "multisite") {
-    phosSite <- phosSite |>
-      tidyr::separate_wider_delim(
-        siteinfo,
-        names = c(
-          NA,
-          "startModSite",
-          "endModSite",
-          "NumPhos",
-          "LocalizedNumPhos",
-          "PhosSites"
-        ),
-        delim = "_",
-        too_few = "align_start"
-      )
-    split_codes <- function(x) {
-      if (is.na(x)) {
-        return(NA)
-      }
-      return(gsub("([A-Z]\\d+)(?=[A-Z]\\d+)", "\\1;", x, perl = TRUE))
-    }
-    phosSite$PhosSites <- sapply(phosSite$PhosSites, split_codes)
-  }
-
   nrPep_exp <- multiSite_long |>
     dplyr::select(Protein, Peptide) |>
     dplyr::distinct() |>
@@ -283,47 +211,25 @@ preprocess_FP_multi_site <- function(
   fasta_annot <- dplyr::left_join(
     nrPep_exp,
     fasta_annot_early,
-    by = c(Protein = "fasta.id"),
+    by = c(Protein = "proteinname"),
     multiple = "all"
   )
   fasta_annot <- fasta_annot |> dplyr::rename(description = fasta.header)
-  fasta_annot2 <- dplyr::inner_join(
-    fasta_annot,
-    phosSite,
-    by = c("proteinname" = "ProteinID")
-  )
 
-  # Make names to match lfqdata
-  hierarchy_keys <- lfqdata$relevant_hierarchy_keys()
-  fasta_annot2 <- fasta_annot2 |>
-    dplyr::rename(!!hierarchy_keys[1] := !!rlang::sym("Protein"))
-  fasta_annot2 <- fasta_annot2 |>
-    dplyr::mutate(
-      !!hierarchy_keys[2] := paste(
-        !!rlang::sym("Index"),
-        !!rlang::sym("Peptide"),
-        sep = "~"
-      )
-    )
+  protein_id <- lfqdata$relevant_hierarchy_keys()[1]
+  fasta_annot <- fasta_annot |>
+    dplyr::rename(!!protein_id := !!rlang::sym("Protein"))
   prot_annot <- prolfquapp::ProteinAnnotation$new(
     lfqdata,
-    fasta_annot2,
+    fasta_annot,
     description = "description",
-    cleaned_ids = "proteinname",
-    full_id = "protein_Id",
+    cleaned_ids = "protein_Id",
+    full_id = "fasta.id",
     exp_nr_children = "nrPeptides",
     pattern_contaminants = pattern_contaminants,
     pattern_decoys = pattern_decoys
   )
 
-  # Verify lfqdata and protein_annotation match on hierarchy keys
-  stopifnot(
-    nrow(dplyr::inner_join(
-      prot_annot$row_annot,
-      lfqdata$data_long(),
-      by = hierarchy_keys
-    )) >
-      0
-  )
+  .validate_protein_annotation(lfqdata, prot_annot)
   return(list(lfqdata = lfqdata, protein_annotation = prot_annot))
 }

@@ -187,25 +187,6 @@ preprocess_BGS_site <- function(
   lfqdata <- prolfqua::LFQData$new(adata, config)
   lfqdata$remove_small_intensities(threshold = 1)
 
-  # Create Site Annotation - one row per site with max PTM_SiteProbability
-  site_annot <- site_long |>
-    dplyr::group_by(
-      PTM_ProteinId,
-      PTM_CollapseKey,
-      PTM_FlankingRegion,
-      PTM_SiteAA,
-      PTM_SiteLocation,
-      PTM_ModificationTitle,
-      PTM_Multiplicity
-    ) |>
-    dplyr::summarize(
-      PTM_SiteProbability = max(PTM_SiteProbability, na.rm = TRUE),
-      .groups = "drop"
-    ) |>
-    dplyr::distinct()
-
-  # Rename columns to match expected naming convention and create PhosSites
-
   # Count peptides per protein
   nrPep_exp <- site_long |>
     dplyr::select(PTM_ProteinId, PTM_Group) |>
@@ -225,57 +206,21 @@ preprocess_BGS_site <- function(
     multiple = "all"
   )
   fasta_annot <- fasta_annot |> dplyr::rename(description = fasta.header)
-  fasta_annot2 <- dplyr::inner_join(
-    fasta_annot,
-    site_annot,
-    by = "PTM_ProteinId"
-  )
 
-  # Make names to match lfqdata - must unite same columns as setup_analysis does
-  hierarchy_keys <- lfqdata$relevant_hierarchy_keys()
-  fasta_annot2 <- fasta_annot2 |>
-    dplyr::rename(!!hierarchy_keys[1] := !!rlang::sym("PTM_ProteinId"))
-  fasta_annot2 <- fasta_annot2 |>
-    tidyr::unite(
-      !!hierarchy_keys[2],
-      c(
-        "protein_Id",
-        "PTM_CollapseKey",
-        "PTM_SiteAA",
-        "PTM_SiteLocation",
-        "PTM_Multiplicity"
-      ),
-      sep = "~",
-      remove = FALSE
-    )
-
-  fasta_annot2 <- fasta_annot2 |>
-    dplyr::rename(
-      modAA = PTM_SiteAA,
-      posInProtein = PTM_SiteLocation,
-      SequenceWindow = PTM_FlankingRegion
-    ) |>
-    dplyr::mutate(PhosSites = paste0(modAA, posInProtein))
-
+  protein_id <- lfqdata$relevant_hierarchy_keys()[1]
+  fasta_annot <- fasta_annot |>
+    dplyr::rename(!!protein_id := !!rlang::sym("PTM_ProteinId"))
   prot_annot <- prolfquapp::ProteinAnnotation$new(
     lfqdata,
-    fasta_annot2,
+    fasta_annot,
     description = "description",
     cleaned_ids = "protein_Id",
-    full_id = "protein_Id",
+    full_id = "fasta.id",
     exp_nr_children = "nrPeptides",
     pattern_contaminants = pattern_contaminants,
     pattern_decoys = pattern_decoys
   )
 
-  #verify
-  stopifnot(
-    nrow(dplyr::inner_join(
-      prot_annot$row_annot,
-      lfqdata$data_long(),
-      by = hierarchy_keys
-    )) >
-      0
-  )
+  .validate_protein_annotation(lfqdata, prot_annot)
   return(list(lfqdata = lfqdata, protein_annotation = prot_annot))
 }
