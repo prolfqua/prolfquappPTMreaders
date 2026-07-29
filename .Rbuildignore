@@ -5,3 +5,11 @@
 ^\.claude$
 ^CLAUDE\.md$
 ^Makefile$
+^\.githooks$
+^air\.toml$
+^make$
+^.*\.BiocCheck$
+^\.github$
+^AGENTS\.md$
+^zenodo_description\.txt$
+^docs$

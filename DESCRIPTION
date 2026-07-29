@@ -9,12 +9,13 @@ Description: Functions for preprocessing data outputs related to PTMs
     from the prolfquapp package.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Depends:
+    R (>= 4.1)
 Imports:
     dplyr,
     logger,
     prolfqua,
     prolfquapp,
-    prophosqua,
     readr,
     rlang,
     tidyr,
@@ -30,6 +31,5 @@ Suggests:
 Config/testthat/edition: 3
 Remotes:
     github::fgcz/prolfqua,
-    github::prolfqua/prolfquapp,
-    github::prolfqua/prophosqua
+    github::prolfqua/prolfquapp
 RoxygenNote: 7.3.3
