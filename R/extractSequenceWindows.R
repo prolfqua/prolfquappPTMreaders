@@ -47,10 +47,19 @@ get_sequence_windows <- function(
 
   unique_prot_pep_seq_2 <- unique_prot_pep_seq |>
     dplyr::mutate(
-      padded_sequence = paste0(
-        strrep("X", half_window),
-        !!rlang::sym(sequence),
-        strrep("X", half_window)
+      # A site whose protein is not in the FASTA arrives here with sequence NA,
+      # and paste0() would turn that into the literal "NA" -- a window of X's
+      # around two letters that no longer marks a missing sequence. Keep the
+      # padding for the sequences there are, and leave the window missing where
+      # the sequence is.
+      padded_sequence = dplyr::if_else(
+        is.na(!!rlang::sym(sequence)),
+        NA_character_,
+        paste0(
+          strrep("X", half_window),
+          !!rlang::sym(sequence),
+          strrep("X", half_window)
+        )
       ),
       pos_in_padded_seq = !!rlang::sym(pos_in_protein) + half_window,
       pos_start = .data$pos_in_padded_seq - half_window,
