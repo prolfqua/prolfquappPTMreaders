@@ -1,3 +1,27 @@
+#' Modified Residue and Position from a FragPipe Site Index
+#'
+#' A `combined_site_*` index names the protein, the modified residue and its
+#' position in that protein, e.g. `A0A1B0GTU1_S108`. The site file carries no
+#' other positional column -- unlike the TMT `abundance_single-site` file, which
+#' ships `Start` and `SequenceWindow` -- so everything downstream that needs a
+#' position or a residue is derived from here.
+#'
+#' @param index character vector of `Index` values.
+#' @return data.frame with `modAA` and `posInProtein`; both `NA` for an index
+#'   that does not end in a residue and a position.
+#' @export
+#' @examples
+#' parse_site_index(c("A0A1B0GTU1_S108", "P02545_T3", "nonsense"))
+parse_site_index <- function(index) {
+  m <- regmatches(index, regexpr("_[A-Za-z][0-9]+$", index))
+  hit <- regexpr("_[A-Za-z][0-9]+$", index) > 0
+  modAA <- rep(NA_character_, length(index))
+  pos <- rep(NA_integer_, length(index))
+  modAA[hit] <- substr(m, 2, 2)
+  pos[hit] <- as.integer(substr(m, 3, nchar(m)))
+  data.frame(modAA = modAA, posInProtein = pos, stringsAsFactors = FALSE)
+}
+
 #' get report.tsv and fasta file location in folder
 #' @param path directory path to search for files
 #' @return list with paths to data and fasta
@@ -54,6 +78,10 @@ read_combined_STY_file <- function(file) {
     )
   tidy_data <- tidy_data |>
     dplyr::rename(ProteinID = !!rlang::sym("Protein ID"))
+  tidy_data <- dplyr::bind_cols(
+    tidy_data,
+    prolfquappPTMreaders::parse_site_index(tidy_data$Index)
+  )
   return(tidy_data)
 }
 
@@ -194,6 +222,16 @@ preprocess_FP_combined_STY <- function(
   protein_id <- lfqdata$relevant_hierarchy_keys()[1]
   fasta_annot <- fasta_annot |>
     dplyr::rename(!!protein_id := !!rlang::sym("Protein"))
+
+  fasta_annot <- site_row_annotation(
+    lfqdata = lfqdata,
+    config = config,
+    long = multiSite_long,
+    protein_annot = fasta_annot,
+    fasta_file = fasta_file,
+    pattern_decoys = pattern_decoys
+  )
+
   prot_annot <- prolfquapp::ProteinAnnotation$new(
     lfqdata,
     fasta_annot,

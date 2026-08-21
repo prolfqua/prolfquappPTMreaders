@@ -219,6 +219,18 @@ preprocess_FP_multi_site <- function(
   protein_id <- lfqdata$relevant_hierarchy_keys()[1]
   fasta_annot <- fasta_annot |>
     dplyr::rename(!!protein_id := !!rlang::sym("Protein"))
+
+  # Same per-site annotation as the LFQ combined_site reader, so that a
+  # downstream analysis cannot tell the two quantifications apart by shape.
+  fasta_annot <- site_row_annotation(
+    lfqdata = lfqdata,
+    config = config,
+    long = multiSite_long,
+    protein_annot = fasta_annot,
+    fasta_file = fasta_file,
+    pattern_decoys = pattern_decoys
+  )
+
   prot_annot <- prolfquapp::ProteinAnnotation$new(
     lfqdata,
     fasta_annot,

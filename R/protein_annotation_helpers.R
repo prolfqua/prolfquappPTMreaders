@@ -3,15 +3,10 @@
   row_annot <- protein_annotation$row_annot
   quant_data <- lfqdata$data_long()
 
-  stopifnot(length(protein_id) == 1L)
-  stopifnot(anyDuplicated(row_annot[[protein_id]]) == 0L)
-  stopifnot(
-    length(intersect(
-      setdiff(lfqdata$relevant_hierarchy_keys(), protein_id),
-      colnames(row_annot)
-    )) ==
-      0L
-  )
+  stopifnot(length(protein_id) >= 1L)
+  stopifnot(anyDuplicated(row_annot[, protein_annotation$pID, drop = FALSE]) == 0L)
+  # A site-level annotation legitimately carries the deeper hierarchy keys: that
+  # is what makes it one row per site rather than per protein.
 
   annotated_quant <- dplyr::right_join(
     row_annot,

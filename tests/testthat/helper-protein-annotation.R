@@ -12,14 +12,12 @@ expect_protein_annotation_contract <- function(result) {
     multiple = "all"
   )
 
-  expect_identical(anyDuplicated(row_annot[[protein_id]]), 0L)
-  expect_length(
-    intersect(
-      setdiff(result$lfqdata$relevant_hierarchy_keys(), protein_id),
-      colnames(row_annot)
-    ),
-    0L
-  )
+  # The annotation is one row per key, where the key is protein_Id for a
+  # protein-level reader and protein_Id + site for a site-level one. Either way
+  # the join below must not multiply the quant rows.
+  expect_identical(anyDuplicated(row_annot[, protein_id, drop = FALSE]), 0L)
+  expect_true(all(protein_id %in% result$lfqdata$relevant_hierarchy_keys()))
+  expect_identical(protein_id[[1]], result$lfqdata$relevant_hierarchy_keys()[[1]])
   expect_equal(nrow(annotated_quant), nrow(quant_data))
   expect_identical(sum(is.na(annotated_quant$description)), 0L)
   expect_identical(sum(is.na(annotated_quant$gene_name)), 0L)
