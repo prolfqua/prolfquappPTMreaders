@@ -5,7 +5,7 @@
 \alias{prolfqua_preprocess_functions}
 \title{preprocess functions implemented in this package}
 \format{
-An object of class \code{list} of length 4.
+An object of class \code{list} of length 5.
 }
 \usage{
 prolfqua_preprocess_functions

@@ -19,6 +19,12 @@ prolfqua_preprocess_functions <- list(
     get_files = "prolfquappPTMreaders::get_FP_combined_STY_files",
     dataset = "prolfquappPTMreaders::dataset_template_FP_combined_STY"
   ),
+  MSSTATS_site = list(
+    extra_args = "list()",
+    preprocess = "prolfquappPTMreaders::preprocess_MSSTATS_site",
+    get_files = "prolfquappPTMreaders::get_MSSTATS_site_files",
+    dataset = "prolfquappPTMreaders::dataset_template_MSSTATS_site"
+  ),
   BGS_site = list(
     extra_args = "list()",
     preprocess = "prolfquappPTMreaders::preprocess_BGS_site",

@@ -1,5 +1,13 @@
 # prolfquappPTMreaders 0.3.0
 
+- New `MSSTATS_site` reader: a site-level table in MSstats long format
+  (`ProteinName`, `Index`, `Run`, `Intensity`) now enters the pipeline
+  directly. That is the format the PTM statistics literature publishes in --
+  MSstatsPTM's converters emit it and its simulations are distributed in it --
+  so data from that world no longer has to be turned into a search engine's
+  output format first. As with the other site readers, the sequence window is
+  cut from the FASTA, so the modified residue, its position and the window
+  follow the same convention as the FragPipe and Spectronaut readers.
 - Both FragPipe site readers now hand over the same per-site annotation --
   modified residue, position in the protein, and sequence window -- so a
   downstream analysis no longer has to tell the TMT and LFQ quantifications
