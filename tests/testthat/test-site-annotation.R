@@ -50,3 +50,29 @@ test_that("parse_site_index returns NA for an index naming no site", {
   expect_true(all(is.na(res$modAA)))
   expect_true(all(is.na(res$posInProtein)))
 })
+
+
+test_that("the Spectronaut site reader hands over residue, position and window", {
+  path <- system.file("extdata", "BGS_site", package = "prolfquappPTMreaders")
+  files <- get_BGS_site_files(path)
+  annot <- dataset_template_BGS_site(files)
+  annot$Group <- "A"
+  annot$Control <- "C"
+  annotation <- prolfquapp::read_annotation(annot)
+
+  result <- suppressMessages(preprocess_BGS_site(files$data, files$fasta, annotation))
+  row_annot <- result$protein_annotation$row_annot
+  sites <- tidyr::separate(
+    row_annot,
+    "site",
+    into = c("p", "key", "aa", "location", "multiplicity"),
+    sep = "~",
+    remove = FALSE
+  )
+
+  expect_true(all(c("modAA", "posInProtein", "SequenceWindow") %in% names(row_annot)))
+  expect_equal(row_annot$modAA, sites$aa)
+  expect_equal(row_annot$posInProtein, as.integer(sites$location))
+  expect_true(all(nchar(row_annot$SequenceWindow) == 15L))
+  expect_equal(substr(row_annot$SequenceWindow, 8, 8), row_annot$modAA)
+})

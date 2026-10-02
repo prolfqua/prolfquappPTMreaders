@@ -1,5 +1,7 @@
 # prolfquappPTMreaders 0.3.0
 
+- The Spectronaut site reader (`BGS_site`) hands over `modAA`, `posInProtein` and `SequenceWindow` with each site, as the FragPipe and MSstats site readers do, so prophosqua can import a Spectronaut phospho DEA; it stopped at the missing columns. The residue and its position come from Spectronaut's own `PTM_SiteAA` and `PTM_SiteLocation`, the window is cut from the FASTA.
+
 - New `MSSTATS_site` reader: a site-level table in MSstats long format
   (`ProteinName`, `Index`, `Run`, `Intensity`) now enters the pipeline
   directly. That is the format the PTM statistics literature publishes in --

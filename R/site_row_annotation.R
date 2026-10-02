@@ -45,31 +45,8 @@ site_row_annotation <- function(
   site$modAA <- parsed$modAA
   site$posInProtein <- parsed$posInProtein
 
-  sequences <- prolfquapp::get_annot_from_fasta(
-    fasta_file,
-    pattern_decoys = pattern_decoys,
-    include_seq = TRUE
-  )
-  if (!is.null(pattern_decoys) && nzchar(pattern_decoys)) {
-    # A decoy shares its cleaned id with the protein it was reversed from, so
-    # an unfiltered lookup silently cuts windows out of reversed sequences.
-    sequences <- sequences |>
-      dplyr::filter(!grepl(pattern_decoys, .data$fasta.id))
-  }
-  sequences <- sequences |>
-    dplyr::select(Protein = "proteinname", "sequence") |>
-    dplyr::distinct(.data$Protein, .keep_all = TRUE)
-
-  site <- site |>
-    dplyr::left_join(sequences, by = "Protein") |>
-    prolfquappPTMreaders::get_sequence_windows(
-      sequence = "sequence",
-      pos_in_protein = "posInProtein"
-    ) |>
-    dplyr::rename(SequenceWindow = "sequence_window") |>
-    dplyr::select(-dplyr::all_of("sequence"))
-
-  site <- site |> dplyr::rename(!!protein_id := !!rlang::sym("Protein"))
+  site <- site_sequence_windows(site, fasta_file, pattern_decoys) |>
+    dplyr::rename(!!protein_id := !!rlang::sym("Protein"))
 
   # The site key is the hierarchy's own concatenation of Index and Peptide;
   # separate_hierarchy splits it back rather than assuming the separator.
@@ -96,4 +73,94 @@ site_row_annotation <- function(
     by = protein_id,
     relationship = "many-to-many"
   )
+}
+
+
+#' Per-Site Row Annotation for the Spectronaut Site Reader
+#'
+#' The same columns as [site_row_annotation()] hands over for the FragPipe
+#' readers -- `modAA`, `posInProtein` and `SequenceWindow`, one row per protein
+#' and site -- for the Spectronaut site report. Spectronaut names the modified
+#' residue and its position in the protein itself (`PTM_SiteAA`,
+#' `PTM_SiteLocation`), and both are part of the site key, so they are split
+#' back out of it rather than parsed from an index; the window is cut from the
+#' FASTA as for the other readers.
+#'
+#' @inheritParams site_row_annotation
+#' @return `protein_annot` extended to one row per protein and site, with
+#'   `modAA`, `posInProtein` and `SequenceWindow`.
+#' @keywords internal
+bgs_site_row_annotation <- function(
+  lfqdata,
+  config,
+  protein_annot,
+  fasta_file,
+  pattern_decoys = NULL
+) {
+  keys <- lfqdata$relevant_hierarchy_keys()
+  protein_id <- keys[[1]]
+  site_id <- keys[[2]]
+
+  site <- lfqdata$data_long() |>
+    dplyr::select(dplyr::all_of(keys)) |>
+    dplyr::distinct() |>
+    tidyr::separate(
+      site_id,
+      into = config$hierarchy[[site_id]],
+      sep = config$sep,
+      remove = FALSE
+    ) |>
+    dplyr::transmute(
+      !!protein_id := .data[[protein_id]],
+      !!site_id := .data[[site_id]],
+      Protein = .data$PTM_ProteinId,
+      modAA = .data$PTM_SiteAA,
+      posInProtein = as.integer(.data$PTM_SiteLocation)
+    )
+
+  site <- site_sequence_windows(site, fasta_file, pattern_decoys) |>
+    dplyr::select(-dplyr::all_of("Protein"))
+
+  # Many-to-many for the same reason as in site_row_annotation().
+  dplyr::left_join(
+    site,
+    protein_annot,
+    by = protein_id,
+    relationship = "many-to-many"
+  )
+}
+
+
+#' The sequence window of each site, cut from the FASTA
+#'
+#' @param site Sites with the FASTA protein name in `Protein` and the 1-based
+#'   position of the modified residue in `posInProtein`.
+#' @inheritParams site_row_annotation
+#' @return `site` with `SequenceWindow`, missing where the protein is not in the
+#'   FASTA.
+#' @keywords internal
+site_sequence_windows <- function(site, fasta_file, pattern_decoys = NULL) {
+  sequences <- prolfquapp::get_annot_from_fasta(
+    fasta_file,
+    pattern_decoys = pattern_decoys,
+    include_seq = TRUE
+  )
+  if (!is.null(pattern_decoys) && nzchar(pattern_decoys)) {
+    # A decoy shares its cleaned id with the protein it was reversed from, so
+    # an unfiltered lookup silently cuts windows out of reversed sequences.
+    sequences <- sequences |>
+      dplyr::filter(!grepl(pattern_decoys, .data$fasta.id))
+  }
+  sequences <- sequences |>
+    dplyr::select(Protein = "proteinname", "sequence") |>
+    dplyr::distinct(.data$Protein, .keep_all = TRUE)
+
+  site |>
+    dplyr::left_join(sequences, by = "Protein") |>
+    prolfquappPTMreaders::get_sequence_windows(
+      sequence = "sequence",
+      pos_in_protein = "posInProtein"
+    ) |>
+    dplyr::rename(SequenceWindow = "sequence_window") |>
+    dplyr::select(-dplyr::all_of("sequence"))
 }

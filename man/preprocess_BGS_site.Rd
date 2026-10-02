@@ -50,4 +50,5 @@ result <- preprocess_BGS_site(
 )
 stopifnot(nrow(result$lfqdata$data) > 0)
 stopifnot(nrow(result$protein_annotation$row_annot) > 0)
+head(result$protein_annotation$row_annot$SequenceWindow)
 }

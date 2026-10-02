@@ -131,6 +131,7 @@ dataset_template_BGS_site <- function(files) {
 #' )
 #' stopifnot(nrow(result$lfqdata$data) > 0)
 #' stopifnot(nrow(result$protein_annotation$row_annot) > 0)
+#' head(result$protein_annotation$row_annot$SequenceWindow)
 preprocess_BGS_site <- function(
   quant_data,
   fasta_file,
@@ -210,6 +211,13 @@ preprocess_BGS_site <- function(
   protein_id <- lfqdata$relevant_hierarchy_keys()[1]
   fasta_annot <- fasta_annot |>
     dplyr::rename(!!protein_id := !!rlang::sym("PTM_ProteinId"))
+  fasta_annot <- bgs_site_row_annotation(
+    lfqdata = lfqdata,
+    config = config,
+    protein_annot = fasta_annot,
+    fasta_file = fasta_file,
+    pattern_decoys = pattern_decoys
+  )
   prot_annot <- prolfquapp::ProteinAnnotation$new(
     lfqdata,
     fasta_annot,
