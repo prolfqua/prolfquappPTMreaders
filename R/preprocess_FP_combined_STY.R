@@ -148,6 +148,7 @@ dataset_template_FP_combined_STY <- function(files) {
 #' stopifnot(nrow(result$lfqdata$data) > 0)
 #' stopifnot(nrow(result$protein_annotation$row_annot) > 0)
 #' head(result$protein_annotation$row_annot$SequenceWindow)
+#' range(result$protein_annotation$row_annot$BLP, na.rm = TRUE)
 
 preprocess_FP_combined_STY <- function(
   quant_data,
@@ -229,7 +230,8 @@ preprocess_FP_combined_STY <- function(
     long = multiSite_long,
     protein_annot = fasta_annot,
     fasta_file = fasta_file,
-    pattern_decoys = pattern_decoys
+    pattern_decoys = pattern_decoys,
+    site_columns = "BLP"
   )
 
   prot_annot <- prolfquapp::ProteinAnnotation$new(
