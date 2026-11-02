@@ -9,8 +9,6 @@ Description: Functions for preprocessing data outputs related to PTMs
     from the prolfquapp package.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Depends:
-    R (>= 4.1)
 Imports:
     dplyr,
     logger,
