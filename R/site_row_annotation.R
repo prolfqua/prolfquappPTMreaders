@@ -24,8 +24,10 @@
 #' @param fasta_file Path to the FASTA, used when the window has to be computed.
 #' @param pattern_decoys Decoy pattern, so a window is never cut out of a
 #'   reversed sequence.
+#' @param site_columns Further per-site columns of `long` to hand over, e.g.
+#'   the best localization probability. Each must hold one value per site.
 #' @return `protein_annot` extended to one row per protein and site, with
-#'   `modAA`, `posInProtein` and `SequenceWindow`.
+#'   `modAA`, `posInProtein`, `SequenceWindow` and `site_columns`.
 #' @keywords internal
 site_row_annotation <- function(
   lfqdata,
@@ -33,13 +35,15 @@ site_row_annotation <- function(
   long,
   protein_annot,
   fasta_file,
-  pattern_decoys = NULL
+  pattern_decoys = NULL,
+  site_columns = character()
 ) {
   protein_id <- lfqdata$relevant_hierarchy_keys()[[1]]
 
   site <- long |>
-    dplyr::select(dplyr::any_of(c("Protein", "Index", "Peptide"))) |>
+    dplyr::select(dplyr::any_of(c("Protein", "Index", "Peptide")), dplyr::all_of(site_columns)) |>
     dplyr::distinct()
+  stopifnot(anyDuplicated(site[dplyr::intersect(c("Protein", "Index", "Peptide"), colnames(site))]) == 0L)
 
   parsed <- prolfquappPTMreaders::parse_site_index(site$Index)
   site$modAA <- parsed$modAA

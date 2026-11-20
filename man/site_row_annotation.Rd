@@ -10,7 +10,8 @@ site_row_annotation(
   long,
   protein_annot,
   fasta_file,
-  pattern_decoys = NULL
+  pattern_decoys = NULL,
+  site_columns = character()
 )
 }
 \arguments{
@@ -26,10 +27,13 @@ site_row_annotation(
 
 \item{pattern_decoys}{Decoy pattern, so a window is never cut out of a
 reversed sequence.}
+
+\item{site_columns}{Further per-site columns of `long` to hand over, e.g.
+the best localization probability. Each must hold one value per site.}
 }
 \value{
 `protein_annot` extended to one row per protein and site, with
-  `modAA`, `posInProtein` and `SequenceWindow`.
+  `modAA`, `posInProtein`, `SequenceWindow` and `site_columns`.
 }
 \description{
 Both FragPipe site readers describe the same thing -- a modified residue in a

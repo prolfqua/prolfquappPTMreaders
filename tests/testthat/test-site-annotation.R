@@ -76,3 +76,22 @@ test_that("the Spectronaut site reader hands over residue, position and window",
   expect_true(all(nchar(row_annot$SequenceWindow) == 15L))
   expect_equal(substr(row_annot$SequenceWindow, 8, 8), row_annot$modAA)
 })
+
+
+test_that("the FragPipe combined STY reader hands over the best localization probability", {
+  path <- system.file("extdata", "FP_combined_STY", package = "prolfquappPTMreaders")
+  files <- get_FP_combined_STY_files(path)
+  annot <- dataset_template_FP_combined_STY(files)
+  annot$Group <- ifelse(grepl("37C", annot$Name), "37C", "42C")
+  annot$Control <- ifelse(annot$Group == "37C", "C", "T")
+  annotation <- prolfquapp::read_annotation(annot)
+
+  invisible(capture.output(
+    result <- preprocess_FP_combined_STY(files$data, files$fasta, annotation)
+  ))
+  row_annot <- result$protein_annotation$row_annot
+
+  expect_true("BLP" %in% colnames(row_annot))
+  expect_false(anyNA(row_annot$BLP))
+  expect_true(all(row_annot$BLP >= 0 & row_annot$BLP <= 1))
+})

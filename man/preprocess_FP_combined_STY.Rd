@@ -44,4 +44,5 @@ result <- preprocess_FP_combined_STY(files$data, files$fasta, annotation)
 stopifnot(nrow(result$lfqdata$data) > 0)
 stopifnot(nrow(result$protein_annotation$row_annot) > 0)
 head(result$protein_annotation$row_annot$SequenceWindow)
+range(result$protein_annotation$row_annot$BLP, na.rm = TRUE)
 }
