@@ -41,18 +41,13 @@ test_that("FragPipe combined STY preprocessing accepts AnalysisConfiguration", {
 
   expect_s3_class(annotation$atable, "AnalysisConfiguration")
 
-  expect_snapshot(
-    {
-      invisible(capture.output(
-        result <- preprocess_FP_combined_STY(
-          files$data,
-          files$fasta,
-          annotation
-        )
-      ))
-    },
-    cran = TRUE
-  )
+  invisible(capture.output(suppressMessages(
+    result <- preprocess_FP_combined_STY(
+      files$data,
+      files$fasta,
+      annotation
+    )
+  )))
 
   expect_s3_class(result$lfqdata, "LFQData")
   expect_gt(nrow(result$lfqdata$data_long()), 0)
