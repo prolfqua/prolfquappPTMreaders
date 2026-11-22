@@ -9,7 +9,6 @@ test_that("FragPipe multisite preprocessing accepts AnalysisConfiguration", {
   annot$Group <- ifelse(grepl("^WT", annot$Name), "WT", "KO")
   annot$Subject <- sub(".*_", "", annot$Name)
   annot$CONTROL <- ifelse(annot$Group == "WT", "C", "T")
-  annot$isotopeLabel <- "light"
   annotation <- prolfquapp::read_annotation(annot)
 
   expect_s3_class(annotation$atable, "AnalysisConfiguration")
@@ -36,7 +35,6 @@ test_that("FragPipe combined STY preprocessing accepts AnalysisConfiguration", {
   annot <- dataset_template_FP_combined_STY(files)
   annot$Group <- ifelse(grepl("37C", annot$Name), "37C", "42C")
   annot$Control <- ifelse(annot$Group == "37C", "C", "T")
-  annot$isotopeLabel <- "light"
   annotation <- prolfquapp::read_annotation(annot)
 
   expect_s3_class(annotation$atable, "AnalysisConfiguration")
@@ -64,7 +62,6 @@ test_that("Spectronaut site preprocessing accepts AnalysisConfiguration", {
   annot <- dataset_template_BGS_site(files)
   annot$Group <- "A"
   annot$Control <- "C"
-  annot$isotopeLabel <- "light"
   annotation <- prolfquapp::read_annotation(annot)
 
   expect_s3_class(annotation$atable, "AnalysisConfiguration")

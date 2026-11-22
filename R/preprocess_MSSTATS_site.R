@@ -152,9 +152,7 @@ preprocess_MSSTATS_site <- function(
   site_long$Peptide <- site_long$PeptideSequence
   site_long$qValue <- 0
   site_long$nr_children <- 1
-  site_long$isotopeLabel <- "light"
 
-  config$isotope_label <- "isotopeLabel"
   config$ident_q_value <- "qValue"
   config$nr_children <- "nr_children"
   config$hierarchy[["protein_Id"]] <- c("Protein")
