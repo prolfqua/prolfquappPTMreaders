@@ -57,7 +57,7 @@ site_row_annotation <- function(
   site_keys <- lfqdata$data_long() |>
     dplyr::select(dplyr::all_of(lfqdata$relevant_hierarchy_keys())) |>
     dplyr::distinct()
-  site_keys <- prolfqua::separate_hierarchy(site_keys, config)
+  site_keys <- prolfquapp::separate_hierarchy(site_keys, config)
 
   # Join on the protein as well: one Index and Peptide pair can belong to more
   # than one protein, and joining without it multiplies the annotation.

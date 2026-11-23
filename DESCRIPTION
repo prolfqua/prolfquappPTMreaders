@@ -13,7 +13,7 @@ Imports:
     dplyr,
     logger,
     prolfqua,
-    prolfquapp,
+    prolfquapp (>= 2.11.2),
     readr,
     rlang,
     tidyr,

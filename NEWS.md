@@ -1,5 +1,6 @@
 # prolfquappPTMreaders 0.3.0
 
+- Splits the site keys with prolfquapp's `separate_hierarchy()`, which moved there from prolfqua 1.9.5; requires prolfquapp >= 2.11.2.
 - The MSstats site reader no longer adds an `isotopeLabel` column or sets the isotope label; prolfqua 1.9.5 is label-free only.
 - The FragPipe `combined_site_STY` reader hands over the best localization probability (`BLP`) of each site again. It was lost when the site annotation was reduced to protein level and not restored when the per-site annotation came back.
 - The Spectronaut site reader (`BGS_site`) hands over `modAA`, `posInProtein` and `SequenceWindow` with each site, as the FragPipe and MSstats site readers do, so prophosqua can import a Spectronaut phospho DEA; it stopped at the missing columns. The residue and its position come from Spectronaut's own `PTM_SiteAA` and `PTM_SiteLocation`, the window is cut from the FASTA.
