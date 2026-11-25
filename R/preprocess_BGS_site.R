@@ -160,16 +160,15 @@ preprocess_BGS_site <- function(
   # join with annotation
   site_long <- dplyr::inner_join(x = annotation$annot, y = site_long, by = bw)
 
-  # add missing required parameters (qvalue)
-  # Use 1 - PTM_SiteProbability as qValue (lower is better)
-  site_long$qValue <- 1 - site_long$PTM_SiteProbability
+  # identification confidence of a site: identification times localization. The site report has no precursor
+  # q-value or PEP; the run-wise protein-group PEP is its only identification evidence.
+  site_long$identification_confidence <- (1 - site_long[["PG_PEP (Run-Wise)"]]) * site_long$PTM_SiteProbability
   site_long$nr_children <- 1
 
   # Setup configuration for site-level analysis (phospho)
   # Note: BGS data is already aggregated at site level by Spectronaut
   # PTM_Group contains which peptides were used but there's only 1 quantity per site-sample
   config$ident_score <- "PTM_SiteProbability"
-  config$ident_q_value <- "qValue"
   config$nr_children <- "nr_children"
   config$hierarchy[["protein_Id"]] <- c("PTM_ProteinId")
   config$hierarchy[["site"]] <- c(

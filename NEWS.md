@@ -1,5 +1,6 @@
 # prolfquappPTMreaders 0.3.0
 
+- The site readers fill prolfqua 1.9.11's `identification_confidence` (in [0, 1], larger is better; the DEA models weight by it) instead of `qValue`. FragPipe multi- and single-site: `MaxPepProb`; FragPipe `combined_site_STY`: the per-run localization probability (the file has no identification probability; it was a q-value of 0); Spectronaut `BGS_site`: (1 - run-wise protein-group PEP) times the site probability, the report having no precursor q-value or PEP (it was 1 - site probability, a localization measure, as q-value); MSstats site: 1.
 - Splits the site keys with prolfquapp's `separate_hierarchy()`, which moved there from prolfqua 1.9.5; requires prolfquapp >= 2.11.2.
 - The MSstats site reader no longer adds an `isotopeLabel` column or sets the isotope label; prolfqua 1.9.5 is label-free only.
 - The FragPipe `combined_site_STY` reader hands over the best localization probability (`BLP`) of each site again. It was lost when the site annotation was reduced to protein level and not restored when the per-site annotation came back.

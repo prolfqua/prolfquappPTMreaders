@@ -150,10 +150,10 @@ preprocess_MSSTATS_site <- function(
   # The columns site_row_annotation() and the site hierarchy key on.
   site_long$Protein <- site_long$ProteinName
   site_long$Peptide <- site_long$PeptideSequence
-  site_long$qValue <- 0
+  # MSstats input carries no identification evidence
+  site_long$identification_confidence <- 1
   site_long$nr_children <- 1
 
-  config$ident_q_value <- "qValue"
   config$nr_children <- "nr_children"
   config$hierarchy[["protein_Id"]] <- c("Protein")
   config$hierarchy[["site"]] <- c("Index", "Peptide")

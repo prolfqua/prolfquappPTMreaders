@@ -177,8 +177,8 @@ preprocess_FP_multi_site <- function(
     y = multiSite_long,
     by = bw
   )
-  # add missing required parameters (qvalue)
-  multiSite_long$qValue <- 1 - multiSite_long$MaxPepProb
+  # the export has no localization probability; the best peptide probability of the site is its confidence
+  multiSite_long$identification_confidence <- multiSite_long$MaxPepProb
   multiSite_long$nr_children <- 1
 
   fasta_annot_early <- prolfquapp::get_annot_from_fasta(
@@ -189,7 +189,6 @@ preprocess_FP_multi_site <- function(
 
   # Setup configuration manually for peptide analysis (phospho)
   config$ident_score <- "MaxPepProb"
-  config$ident_q_value <- "qValue"
   config$nr_children <- "nr_children"
   config$hierarchy[["protein_Id"]] <- c("Protein")
   config$hierarchy[["site"]] <- c("Index", "Peptide")

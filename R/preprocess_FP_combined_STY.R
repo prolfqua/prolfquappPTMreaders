@@ -186,13 +186,12 @@ preprocess_FP_combined_STY <- function(
   )
   multiSite_long$Protein <- multiSite_long$ProteinID
 
-  # add missing required parameters (qvalue)
-  multiSite_long$qValue <- 0
+  # the file has no identification probability; the per-run localization probability is the site's confidence
+  multiSite_long$identification_confidence <- multiSite_long$Localization_Probability
   multiSite_long$nr_children <- 1
 
   # Setup configuration manually for peptide analysis (phospho)
   config$ident_score <- "Localization_Probability"
-  config$ident_q_value <- "qValue"
   config$nr_children <- "nr_children"
   config$hierarchy[["protein_Id"]] <- c("Protein")
   config$hierarchy[["site"]] <- c("Index", "Peptide")
