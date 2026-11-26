@@ -22,6 +22,8 @@ test_that("FragPipe multisite preprocessing accepts AnalysisConfiguration", {
 
   expect_s3_class(result$lfqdata, "LFQData")
   expect_gt(nrow(result$lfqdata$data_long()), 0)
+  confidence <- result$lfqdata$data_long()[[result$lfqdata$get_config()$identification_confidence]]
+  expect_gte(min(confidence, na.rm = TRUE), 0.5)
   expect_protein_annotation_contract(result)
 })
 
@@ -49,6 +51,8 @@ test_that("FragPipe combined STY preprocessing accepts AnalysisConfiguration", {
 
   expect_s3_class(result$lfqdata, "LFQData")
   expect_gt(nrow(result$lfqdata$data_long()), 0)
+  confidence <- result$lfqdata$data_long()[[result$lfqdata$get_config()$identification_confidence]]
+  expect_gte(min(confidence, na.rm = TRUE), 0.5)
   expect_protein_annotation_contract(result)
 })
 
@@ -74,5 +78,7 @@ test_that("Spectronaut site preprocessing accepts AnalysisConfiguration", {
 
   expect_s3_class(result$lfqdata, "LFQData")
   expect_gt(nrow(result$lfqdata$data_long()), 0)
+  confidence <- result$lfqdata$data_long()[[result$lfqdata$get_config()$identification_confidence]]
+  expect_gte(min(confidence, na.rm = TRUE), 0.5)
   expect_protein_annotation_contract(result)
 })

@@ -162,7 +162,9 @@ preprocess_BGS_site <- function(
 
   # identification confidence of a site: identification times localization. The site report has no precursor
   # q-value or PEP; the run-wise protein-group PEP is its only identification evidence.
-  site_long$identification_confidence <- (1 - site_long[["PG_PEP (Run-Wise)"]]) * site_long$PTM_SiteProbability
+  site_long$identification_confidence <- prolfquapp::floor_identification_confidence(
+    (1 - site_long[["PG_PEP (Run-Wise)"]]) * site_long$PTM_SiteProbability
+  )
   site_long$nr_children <- 1
 
   # Setup configuration for site-level analysis (phospho)

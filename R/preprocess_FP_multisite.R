@@ -178,7 +178,7 @@ preprocess_FP_multi_site <- function(
     by = bw
   )
   # the export has no localization probability; the best peptide probability of the site is its confidence
-  multiSite_long$identification_confidence <- multiSite_long$MaxPepProb
+  multiSite_long$identification_confidence <- prolfquapp::floor_identification_confidence(multiSite_long$MaxPepProb)
   multiSite_long$nr_children <- 1
 
   fasta_annot_early <- prolfquapp::get_annot_from_fasta(

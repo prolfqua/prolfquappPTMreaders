@@ -187,7 +187,9 @@ preprocess_FP_combined_STY <- function(
   multiSite_long$Protein <- multiSite_long$ProteinID
 
   # the file has no identification probability; the per-run localization probability is the site's confidence
-  multiSite_long$identification_confidence <- multiSite_long$Localization_Probability
+  multiSite_long$identification_confidence <- prolfquapp::floor_identification_confidence(
+    multiSite_long$Localization_Probability
+  )
   multiSite_long$nr_children <- 1
 
   # Setup configuration manually for peptide analysis (phospho)
